@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Admin • Tabungan</title>
+  <title>Admin • BukanBodong</title>
   <link rel="stylesheet" href="ui.css"/>
 </head>
 <body>
@@ -12,14 +12,14 @@
       <div class="brand">
         <div class="dot"></div>
         <div>
-          <div class="title">Admin Panel</div>
+          <div class="title">ADMIN brooo</div>
           <div class="sub" id="who">—</div>
         </div>
       </div>
 
       <div class="row">
         <span class="badge live" id="liveBadge">Live</span>
-        <a class="btn" href="user.html">Mode user</a>
+        <a class="btn" href="user.html">User Mode</a>
         <button class="btn" id="btnLogout">Logout</button>
       </div>
     </div>
@@ -27,17 +27,17 @@
     <div class="card">
       <div class="row space gap2">
         <div>
-          <div class="h1" style="margin:0;">Kelola transaksi</div>
-          <div class="muted">Pilih target, lalu tambah/edit/hapus transaksi. Semua update realtime.</div>
+          <div class="h1" style="margin:0;">Manage User's Transactions</div>
+          <div class="muted">Choose the user, then edit. It's that simple.</div>
         </div>
 
         <div class="row">
           <div class="field" style="margin:0; min-width:260px;">
-            <div class="label">Target (dropdown)</div>
+            <div class="label">User List</div>
             <select id="targetSelect"></select>
           </div>
           <div class="field" style="margin:0; min-width:240px;">
-            <div class="label">Cari target (opsional)</div>
+            <div class="label">Find by Name</div>
             <input id="targetSearch" class="input" placeholder="ketik nama/username…"/>
           </div>
         </div>
@@ -45,15 +45,15 @@
 
       <div class="kpis">
         <div class="kpi">
-          <div class="k">Saldo</div>
+          <div class="k">Balance</div>
           <div class="v" id="kSaldo">—</div>
         </div>
         <div class="kpi">
-          <div class="k">Total Masuk</div>
+          <div class="k">Total Income</div>
           <div class="v" id="kIn">—</div>
         </div>
         <div class="kpi">
-          <div class="k">Total Keluar</div>
+          <div class="k">Total Outgoing</div>
           <div class="v" id="kOut">—</div>
         </div>
       </div>
@@ -62,13 +62,13 @@
 
     <div class="row space gap2">
     <div>
-        <div class="h2">Pocket Valas</div>
-        <div class="muted">Buat pocket dan lakukan konversi dari IDR ke pocket.</div>
+        <div class="h2">Forex Pocket</div>
+        <div class="muted">Create pockets and convert from IDR to Forex</div>
     </div>
     <div class="row">
-        <button class="btn good" id="btnNewPocket">+ Tambah pocket</button>
-        <button class="btn primary" id="btnFxConvert">Konversi IDR → Valas</button>
-        <button class="btn" id="btnFxSell">Konversi Valas → IDR</button>
+        <button class="btn good" id="btnNewPocket">+ Add pocket</button>
+        <button class="btn primary" id="btnFxConvert">Convert IDR → Forex</button>
+        <button class="btn" id="btnFxSell">Convert Forex → IDR</button>
     </div>
     </div>
 
@@ -79,27 +79,27 @@
 
       <div class="row space">
         <div class="row">
-          <button class="btn primary" id="btnAdd">+ Tambah transaksi</button>
+          <button class="btn primary" id="btnAdd">+ Add Transactions</button>
           <button class="btn" id="btnReload">Reload</button>
           <label class="pill" style="cursor:pointer;">
             <input id="toggleShowDeleted" type="checkbox" style="accent-color: var(--accent);"/>
-            Tampilkan deleted
+            Show deleted
           </label>
         </div>
 
         <div class="row">
           <div class="field" style="margin:0; min-width:160px;">
-            <div class="label">Bulan</div>
+            <div class="label">Month</div>
             <select id="filterMonth">
-              <option value="">Semua</option>
+              <option value="">All</option>
             </select>
           </div>
           <div class="field" style="margin:0; min-width:160px;">
-            <div class="label">Tipe</div>
+            <div class="label">Type</div>
             <select id="filterType">
-              <option value="">Semua</option>
-              <option value="in">Masuk</option>
-              <option value="out">Keluar</option>
+              <option value="">All</option>
+              <option value="in">Income</option>
+              <option value="out">Expense</option>
             </select>
           </div>
           <div class="field" style="margin:0; min-width:240px;">
@@ -113,21 +113,21 @@
         <table>
           <thead>
             <tr>
-            <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
-            <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
+            <th class="sortable" data-sort="date">Date <span class="sortIcon" id="si_date">↕</span></th>
+            <th class="sortable" data-sort="note">Note <span class="sortIcon" id="si_note">↕</span></th>
             <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
             <th class="sortable" data-sort="currency">Currency <span class="sortIcon" id="si_currency">↕</span></th>
-            <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
-            <th class="num">Saldo berjalan</th>
-            <th class="num">Aksi</th>
+            <th class="sortable" data-sort="type">Type <span class="sortIcon" id="si_type">↕</span></th>
+            <th class="num">Running Balance</th>
+            <th class="num">Actions</th>
             </tr>
           </thead>
           <tbody id="txBody">
             <tr><td colspan="7">
               <div class="empty">
                 <div class="emoji">⏳</div>
-                <div class="big">Memuat data…</div>
-                <div>Silakan tunggu sebentar.</div>
+                <div class="big">Loading data…</div>
+                <div>Please wait a moment.</div>
               </div>
             </td></tr>
           </tbody>
@@ -143,7 +143,7 @@
     <div class="modal">
       <div class="modalHeader">
         <div>
-          <div class="modalTitle" id="modalTitle">Tambah transaksi</div>
+          <div class="modalTitle" id="modalTitle">Add transaction</div>
           <div class="muted" id="modalSub">—</div>
         </div>
         <button class="btn icon ghost" id="btnCloseModal">✕</button>
@@ -152,12 +152,12 @@
       <div class="modalBody">
         <div class="split2">
             <div class="field" style="margin-top:0;">
-            <div class="label">Tanggal</div>
+            <div class="label">Date</div>
             <input id="mDate" class="input" type="date"/>
             </div>
 
             <div class="field" style="margin-top:0;">
-            <div class="label">Mata uang</div>
+            <div class="label">Currency</div>
             <select id="mCurrency"></select>
             <div class="smallNote" id="mCurrencyHint">—</div>
             </div>
@@ -165,27 +165,27 @@
 
         <div class="split2">
             <div class="field" style="margin-top:0;">
-            <div class="label">Tipe</div>
+            <div class="label">Type</div>
             <select id="mType">
-                <option value="in">Masuk</option>
-                <option value="out">Keluar</option>
+                <option value="in">Income</option>
+                <option value="out">Expense</option>
             </select>
             </div>
 
             <div class="field" style="margin-top:0;" id="amtIDRField">
-            <div class="label">Nominal (IDR)</div>
+            <div class="label">Value (IDR)</div>
             <input id="mAmount" class="input" inputmode="numeric" placeholder="mis: 88.000"/>
             </div>
         </div>
 
         <div class="field" id="amtFXField" style="display:none;">
-            <div class="label">Nominal (Valas)</div>
+            <div class="label">Value (Forex)</div>
             <input id="mAmountFX" class="input" inputmode="decimal" placeholder="mis: 5.25"/>
             <div class="smallNote" id="mFxHint">—</div>
         </div>
 
         <div class="field">
-            <div class="label">Catatan</div>
+            <div class="label">Notes</div>
             <input id="mNote" class="input" placeholder="mis: uang makan"/>
         </div>
 
@@ -193,10 +193,10 @@
         </div>
 
       <div class="modalFooter">
-        <button class="btn" id="btnCancelModal">Batal</button>
-        <button class="btn bad" id="btnHardDelete" style="display:none;">Hapus permanen</button>
+        <button class="btn" id="btnCancelModal">Cancel</button>
+        <button class="btn bad" id="btnHardDelete" style="display:none;">Delete permanently</button>
         <button class="btn" id="btnRestore" style="display:none;">Restore</button>
-        <button class="btn primary" id="btnSaveModal">Simpan</button>
+        <button class="btn primary" id="btnSaveModal">Save</button>
       </div>
     </div>
   </div>
@@ -206,27 +206,27 @@
     <div class="modal" style="max-width:560px;">
       <div class="modalHeader">
         <div>
-          <div class="modalTitle">Konfirmasi hapus</div>
-          <div class="muted">Transaksi akan disembunyikan dari user (soft delete). Bisa restore dari admin.</div>
+          <div class="modalTitle">Confirm delete</div>
+          <div class="muted">Transaction will be hidden from user (soft delete). Can be restored from admin.</div>
         </div>
         <button class="btn icon ghost" id="btnCloseConfirm">✕</button>
       </div>
 
       <div class="modalBody">
         <div class="card" style="box-shadow:none; background: rgba(255,255,255,.04);">
-          <div class="muted">Yang akan dihapus:</div>
+          <div class="muted">What will be deleted:</div>
           <div style="font-weight:900; margin-top:6px;" id="confirmText">—</div>
         </div>
 
         <label class="pill" style="cursor:pointer; margin-top:12px;">
           <input id="confirmCheck" type="checkbox" style="accent-color: var(--accent);"/>
-          Saya yakin dan paham konsekuensinya
+          I am sure and understand the consequences
         </label>
       </div>
 
       <div class="modalFooter">
-        <button class="btn" id="btnCancelConfirm">Batal</button>
-        <button class="btn bad" id="btnDoDelete" disabled>Hapus</button>
+        <button class="btn" id="btnCancelConfirm">Cancel</button>
+        <button class="btn bad" id="btnDoDelete" disabled>Delete</button>
       </div>
     </div>
   </div>
@@ -235,7 +235,7 @@
   <div class="modal">
     <div class="modalHeader">
       <div>
-        <div class="modalTitle">Tambah pocket</div>
+        <div class="modalTitle">Add pocket</div>
         <div class="muted" id="pocketModalSub">—</div>
       </div>
       <button class="btn icon ghost" id="btnClosePocketModal">✕</button>
@@ -246,7 +246,7 @@
         <div class="field" style="margin-top:0;">
           <div class="label">Currency code</div>
           <input id="pCurrency" class="input" placeholder="USD / JPY / EUR"/>
-          <div class="smallNote">3 huruf, contoh USD.</div>
+          <div class="smallNote">3 letters, ie. USD.</div>
         </div>
 
         <div class="field" style="margin-top:0;">
@@ -254,12 +254,12 @@
           <input id="pRate" class="input" inputmode="numeric" placeholder="contoh: 15500"/>
         </div>
       </div>
-      <div class="muted" style="margin-top:10px;">Saldo awal pocket = 0.</div>
+      <div class="muted" style="margin-top:10px;">Initial pocket balance = 0.</div>
     </div>
 
     <div class="modalFooter">
-      <button class="btn" id="btnCancelPocketModal">Batal</button>
-      <button class="btn primary" id="btnSavePocket">Simpan pocket</button>
+      <button class="btn" id="btnCancelPocketModal">Cancel</button>
+      <button class="btn primary" id="btnSavePocket">Save pocket</button>
     </div>
   </div>
 </div>
@@ -268,7 +268,7 @@
   <div class="modal">
     <div class="modalHeader">
       <div>
-        <div class="modalTitle">Konversi IDR → Valas</div>
+        <div class="modalTitle">Convert IDR → Forex</div>
         <div class="muted" id="fxModalSub">—</div>
       </div>
       <button class="btn icon ghost" id="btnCloseFxModal">✕</button>
@@ -277,41 +277,41 @@
     <div class="modalBody">
       <div class="split2">
         <div class="field" style="margin-top:0;">
-          <div class="label">Pilih pocket</div>
+          <div class="label">Choose pocket</div>
           <select id="fxPocket"></select>
         </div>
 
         <div class="field" style="margin-top:0;">
-          <div class="label">Tanggal</div>
+          <div class="label">Date</div>
           <input id="fxDate" class="input" type="date"/>
         </div>
       </div>
 
       <div class="split2">
         <div class="field">
-          <div class="label">IDR yang dikonversi</div>
+          <div class="label">IDR that is converted</div>
           <input id="fxIdr" class="input" inputmode="numeric" placeholder="contoh: 100000"/>
-          <div class="smallNote" id="fxIdrHint">Saldo IDR tersedia: —</div>
+          <div class="smallNote" id="fxIdrHint">IDR balance remaining: —</div>
         </div>
 
         <div class="field">
-          <div class="label">Hasil valas</div>
+          <div class="label">Forex results</div>
           <input id="fxResult" class="input" disabled placeholder="—"/>
           <div class="smallNote" id="fxRateHint">Rate: —</div>
         </div>
       </div>
 
       <div class="field">
-        <div class="label">Catatan</div>
+        <div class="label">Note</div>
         <input id="fxNote" class="input" placeholder="mis: beli USD untuk tabungan"/>
       </div>
 
-      <div class="muted" style="margin-top:10px;">Konversi membuat 2 histori: IDR keluar & valas masuk.</div>
+      <div class="muted" style="margin-top:10px;">Conversion creates 2 histories: IDR out & forex in.</div>
     </div>
 
     <div class="modalFooter">
-      <button class="btn" id="btnCancelFxModal">Batal</button>
-      <button class="btn primary" id="btnDoFx">Konversi</button>
+      <button class="btn" id="btnCancelFxModal">Cancel</button>
+      <button class="btn primary" id="btnDoFx">Convert</button>
     </div>
   </div>
 </div>
@@ -320,7 +320,7 @@
   <div class="modal">
     <div class="modalHeader">
       <div>
-        <div class="modalTitle">Konversi Valas → IDR</div>
+        <div class="modalTitle">Convert Forex → IDR</div>
         <div class="muted" id="fxSellModalSub">—</div>
       </div>
       <button class="btn icon ghost" id="btnCloseFxSellModal">✕</button>
@@ -329,41 +329,41 @@
     <div class="modalBody">
       <div class="split2">
         <div class="field" style="margin-top:0;">
-          <div class="label">Pilih pocket</div>
+          <div class="label">Choose pocket</div>
           <select id="fxSellPocket"></select>
         </div>
 
         <div class="field" style="margin-top:0;">
-          <div class="label">Tanggal</div>
+          <div class="label">Date</div>
           <input id="fxSellDate" class="input" type="date"/>
         </div>
       </div>
 
       <div class="split2">
         <div class="field">
-          <div class="label">Valas yang dikonversi</div>
+          <div class="label">Forex that is converted</div>
           <input id="fxSellAmount" class="input" inputmode="decimal" placeholder="mis: 5"/>
-          <div class="smallNote" id="fxSellBalHint">Saldo pocket: —</div>
+          <div class="smallNote" id="fxSellBalHint">Pocket balance: —</div>
         </div>
 
         <div class="field">
-          <div class="label">Hasil IDR</div>
+          <div class="label">IDR results</div>
           <input id="fxSellResult" class="input" disabled placeholder="—"/>
           <div class="smallNote" id="fxSellRateHint">Rate: —</div>
         </div>
       </div>
 
       <div class="field">
-        <div class="label">Catatan</div>
+        <div class="label">Note</div>
         <input id="fxSellNote" class="input" placeholder="mis: konversi untuk kebutuhan"/>
       </div>
 
-      <div class="muted" style="margin-top:10px;">Konversi membuat 2 histori: valas keluar & IDR masuk.</div>
+      <div class="muted" style="margin-top:10px;">Conversion creates 2 histories: forex out & IDR in.</div>
     </div>
 
     <div class="modalFooter">
-      <button class="btn" id="btnCancelFxSellModal">Batal</button>
-      <button class="btn primary" id="btnDoFxSell">Konversi</button>
+      <button class="btn" id="btnCancelFxSellModal">Cancel</button>
+      <button class="btn primary" id="btnDoFxSell">Convert</button>
     </div>
   </div>
 </div>
