@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>User • Tabungan</title>
+  <link rel="stylesheet" href="ui.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <div class="brand">
+        <div class="dot"></div>
+        <div>
+          <div class="title">Tabungan Adik</div>
+          <div class="sub" id="who">—</div>
+        </div>
+      </div>
+      <div class="row">
+        <a class="btn" href="admin.html" id="adminLink" style="display:none;">Admin</a>
+        <button id="btnLogout" class="btn">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h1">Saldo saat ini</div>
+      <div class="muted">Saldo dihitung otomatis dari histori transaksi.</div>
+      <div class="balance" id="balance">—</div>
+      <div class="row">
+        <span class="pill" id="sumIn">Masuk: —</span>
+        <span class="pill" id="sumOut">Keluar: —</span>
+      </div>
+      <div class="toast" id="status">—</div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="title">Histori</div>
+          <div class="sub">Cashflow tabungan kamu</div>
+        </div>
+        <button id="btnRefresh" class="btn">Refresh</button>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Catatan</th>
+              <th class="right">Masuk</th>
+              <th class="right">Keluar</th>
+              <th class="right">Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="txBody"><tr><td colspan="5">—</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script type="module" src="user.js"></script>
+</body>
+</html>
