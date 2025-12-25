@@ -126,3 +126,18 @@ export function sortByField(items, field, dir){
   });
   return arr;
 }
+
+export function fmtCurrency(code, amount){
+  const c = String(code || "IDR").toUpperCase();
+  const v = Number(amount || 0);
+  if (c === "IDR") return fmtIDR(v);
+  try{
+    return new Intl.NumberFormat("id-ID", { style:"currency", currency: c }).format(v);
+  }catch{
+    return `${v.toLocaleString("id-ID")} ${c}`;
+  }
+}
+
+export function toISODateToday(){
+  return new Date().toISOString().slice(0,10);
+}

@@ -44,6 +44,18 @@
           </div>
         </div>
 
+        <div class="card" style="margin-top:14px;">
+        <div class="row space">
+            <div>
+            <div class="h2">Pocket Valas</div>
+            <div class="muted">Saldo valas hasil konversi dari IDR.</div>
+            </div>
+            <span class="pill" id="pocketCount">—</span>
+        </div>
+
+        <div id="pocketCards" style="margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
+        </div>
+
         <div class="muted" style="margin-top:10px;" id="meta">—</div>
       </div>
 
@@ -92,15 +104,16 @@
         <table>
           <thead>
             <tr>
-              <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
-              <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
-              <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
-              <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
-              <th class="num">Saldo berjalan</th>
-            </tr>
+        <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
+        <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
+        <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
+        <th class="sortable" data-sort="currency">Currency <span class="sortIcon" id="si_currency">↕</span></th>
+        <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
+        <th class="num">Saldo berjalan</th>
+        </tr>
           </thead>
           <tbody id="txBody">
-            <tr><td colspan="5">
+            <tr><td colspan="6">
               <div class="empty">
                 <div class="emoji">⏳</div>
                 <div class="big">Memuat data…</div>

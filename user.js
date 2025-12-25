@@ -1,7 +1,7 @@
 // user.js (ES module)
 import {
   auth, db, fmtIDR, fmtDate, monthKeyFromDateISO, buildMonthOptions,
-  debounce, toast, escapeHtml, sortByField
+  debounce, toast, escapeHtml, sortByField, fmtCurrency
 } from "./common.js";
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -28,15 +28,25 @@ const btnReload = document.getElementById("btnReload");
 const txBody = document.getElementById("txBody");
 const count = document.getElementById("count");
 
-let allTx = [];  // non-deleted only from view
-let rawTx = [];  // includes deleted (but user will filter out)
-let unsub = null;
+const pocketCards = document.getElementById("pocketCards");
+const pocketCount = document.getElementById("pocketCount");
+
+let rawIdrTx = [];
+let rawPocketTx = [];
+let pockets = [];
+
+let allEvents = [];
+let viewEvents = [];
+
+let unsubIdr = null;
+let unsubPT = null;
+let unsubP = null;
 
 let sortField = "date";
 let sortDir = "desc";
 
 function setSortIcon(field){
-  const map = ["date","note","amount","type"];
+  const map = ["date","note","amount","currency","type"];
   for (const f of map){
     const el = document.getElementById(`si_${f}`);
     if (el) el.textContent = "↕";
@@ -45,90 +55,177 @@ function setSortIcon(field){
   if (el) el.textContent = sortDir === "asc" ? "↑" : "↓";
 }
 
-function computeKpis(txs){
+function computeIdrKpis(txs){
   let bal = 0, tin = 0, tout = 0;
   for (const t of txs){
+    if (t.isDeleted) continue;
     if (t.type === "in"){ bal += t.amount; tin += t.amount; }
     else { bal -= t.amount; tout += t.amount; }
   }
   return { bal, tin, tout };
 }
 
-function rebuildMonthOptions(txs){
-  const months = buildMonthOptions(txs);
+function renderPocketCards(){
+  if (!pocketCards) return;
+
+  if (!pockets.length){
+    pocketCards.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+      <div class="emoji">💱</div>
+      <div class="big">Belum ada pocket</div>
+      <div>Nanti muncul setelah admin menambah pocket dan melakukan konversi.</div>
+    </div>`;
+    if (pocketCount) pocketCount.textContent = "0 pocket";
+    return;
+  }
+
+  pocketCards.innerHTML = pockets.map(p => `
+    <div class="kpi">
+      <div class="k">${escapeHtml(p.currency)} • Rate ${fmtIDR(p.rate)} / 1</div>
+      <div class="v">${fmtCurrency(p.currency, p.balance)}</div>
+      <div class="muted" style="margin-top:6px;">Pocket aktif</div>
+    </div>
+  `).join("");
+
+  if (pocketCount) pocketCount.textContent = `${pockets.length} pocket`;
+}
+
+function normalizeEvents(){
+  const events = [];
+
+  for (const t of rawIdrTx){
+    events.push({
+      source: "IDR",
+      id: t.id,
+      date: t.date,
+      type: t.type,
+      amount: Number(t.amount || 0),
+      currency: "IDR",
+      note: t.note || "",
+      isDeleted: Boolean(t.isDeleted),
+      createdAt: t.createdAt || null
+    });
+  }
+
+  for (const t of rawPocketTx){
+    const cur = String(t.currency || "").toUpperCase();
+    const normalizedType = (t.type === "fx_buy") ? "in" : t.type;
+    const noteExtra = (t.type === "fx_buy")
+      ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+      : "";
+    events.push({
+      source: "POCKET",
+      id: t.id,
+      date: t.date,
+      type: normalizedType,
+      amount: Number(t.amount || 0),
+      currency: cur,
+      note: (t.note || "") + noteExtra,
+      isDeleted: Boolean(t.isDeleted),
+      rawType: t.type
+    });
+  }
+
+  allEvents = events;
+}
+
+function rebuildMonthOptionsFromEvents(){
+  const base = allEvents.filter(x => !x.isDeleted);
+  const months = buildMonthOptions(base);
   const prev = filterMonth.value;
   filterMonth.innerHTML = `<option value="">Semua</option>` + months.map(m => `<option value="${m}">${m}</option>`).join("");
   if (months.includes(prev)) filterMonth.value = prev;
 }
 
-function applyFilters(){
-  // user: hide deleted always
-  allTx = rawTx.filter(t => !t.isDeleted);
+function computeRunningMaps(){
+  // IDR running
+  const idrAsc = rawIdrTx.filter(t => !t.isDeleted).slice().sort((a,b)=> String(a.date||"").localeCompare(String(b.date||"")));
+  let runIdr = 0;
+  const runMapIdr = new Map();
+  for (const t of idrAsc){
+    runIdr += (t.type === "in" ? t.amount : -t.amount);
+    runMapIdr.set(t.id, runIdr);
+  }
 
-  rebuildMonthOptions(allTx);
+  // Pocket running per currency
+  const runMapPocket = new Map();
+  const perCur = new Map();
+  const pocketAsc = rawPocketTx.filter(t => !t.isDeleted).slice().sort((a,b)=> String(a.date||"").localeCompare(String(b.date||"")));
+  for (const t of pocketAsc){
+    const cur = String(t.currency || "").toUpperCase();
+    const running = perCur.get(cur) || 0;
+    const eff = (t.type === "out") ? -Number(t.amount||0) : Number(t.amount||0);
+    const next = running + eff;
+    perCur.set(cur, next);
+    runMapPocket.set(`${cur}:${t.id}`, next);
+  }
+
+  return { runMapIdr, runMapPocket };
+}
+
+function applyFilters(){
+  normalizeEvents();
+  rebuildMonthOptionsFromEvents();
 
   const month = filterMonth.value;
   const type = filterType.value;
   const q = (filterSearch.value || "").trim().toLowerCase();
 
-  let view = [...allTx];
+  let view = allEvents.filter(t => !t.isDeleted);
 
-  if (month){
-    view = view.filter(t => monthKeyFromDateISO(t.date) === month);
-  }
-  if (type){
-    view = view.filter(t => t.type === type);
-  }
-  if (q){
-    view = view.filter(t => String(t.note || "").toLowerCase().includes(q));
-  }
+  if (month) view = view.filter(t => monthKeyFromDateISO(t.date) === month);
+  if (type) view = view.filter(t => t.type === type);
+  if (q) view = view.filter(t => String(t.note||"").toLowerCase().includes(q));
 
   view = sortByField(view, sortField, sortDir);
+  viewEvents = view;
 
-  // KPI based on all non-deleted
-  const { bal, tin, tout } = computeKpis(allTx);
+  // KPI hanya untuk IDR (saldo utama)
+  const { bal, tin, tout } = computeIdrKpis(rawIdrTx);
   kSaldo.textContent = fmtIDR(bal);
   kIn.textContent = fmtIDR(tin);
   kOut.textContent = fmtIDR(tout);
 
-  renderTable(view);
-  count.textContent = `${view.length} transaksi`;
-  meta.textContent = `Non-deleted: ${allTx.length} • Terlihat: ${view.length} • Live update aktif`;
+  renderTable();
+  count.textContent = `${viewEvents.length} baris`;
+  meta.textContent = `Histori gabungan IDR + Pocket • Live update aktif`;
 }
 
-function renderTable(view){
-  if (!view.length){
-    txBody.innerHTML = `<tr><td colspan="5">
+function renderTable(){
+  if (!viewEvents.length){
+    txBody.innerHTML = `<tr><td colspan="6">
       <div class="empty">
         <div class="emoji">🗂️</div>
-        <div class="big">Belum ada transaksi</div>
-        <div>Nanti histori akan muncul otomatis saat admin menambah transaksi.</div>
+        <div class="big">Belum ada histori</div>
+        <div>Nanti histori muncul saat admin menambah transaksi atau konversi.</div>
       </div>
     </td></tr>`;
     return;
   }
 
-  // running balance based on ascending timeline
-  let run = 0;
-  const baseAsc = allTx.slice().sort((a,b)=> String(a.date||"").localeCompare(String(b.date||"")));
-  const runningMap = new Map();
-  for (const t of baseAsc){
-    run += (t.type === "in" ? t.amount : -t.amount);
-    runningMap.set(t.id, run);
-  }
+  const { runMapIdr, runMapPocket } = computeRunningMaps();
 
-  txBody.innerHTML = view.map(t => {
-    const amt = t.type === "in"
-      ? `<span class="moneyIn">${fmtIDR(t.amount)}</span>`
-      : `<span class="moneyOut">${fmtIDR(t.amount)}</span>`;
-    const typeLabel = t.type === "in" ? "Masuk" : "Keluar";
-    const runTxt = fmtIDR(runningMap.get(t.id) ?? 0);
+  txBody.innerHTML = viewEvents.map(e => {
+    const amt = e.type === "in"
+      ? `<span class="moneyIn">${fmtCurrency(e.currency, e.amount)}</span>`
+      : `<span class="moneyOut">${fmtCurrency(e.currency, e.amount)}</span>`;
+
+    const typeLabel = e.type === "in" ? "Masuk" : "Keluar";
+
+    let runTxt = "-";
+    if (e.source === "IDR"){
+      const v = runMapIdr.get(e.id);
+      runTxt = (v === undefined) ? "-" : fmtIDR(v);
+    } else {
+      const v = runMapPocket.get(`${e.currency}:${e.id}`);
+      runTxt = (v === undefined) ? "-" : fmtCurrency(e.currency, v);
+    }
 
     return `
       <tr>
-        <td data-label="Tanggal">${fmtDate(t.date)}</td>
-        <td data-label="Catatan">${escapeHtml(t.note || "")}</td>
+        <td data-label="Tanggal">${fmtDate(e.date)}</td>
+        <td data-label="Catatan">${escapeHtml(e.note || "")}</td>
         <td class="num" data-label="Nominal">${amt}</td>
+        <td data-label="Currency">${escapeHtml(e.currency)}</td>
         <td data-label="Tipe">${typeLabel}</td>
         <td class="num" data-label="Saldo">${runTxt}</td>
       </tr>
@@ -140,9 +237,8 @@ document.querySelectorAll("th.sortable").forEach(th => {
   th.addEventListener("click", () => {
     const f = th.dataset.sort;
     if (!f) return;
-    if (sortField === f){
-      sortDir = (sortDir === "asc") ? "desc" : "asc";
-    } else {
+    if (sortField === f) sortDir = (sortDir === "asc") ? "desc" : "asc";
+    else {
       sortField = f;
       sortDir = (f === "date") ? "desc" : "asc";
     }
@@ -165,7 +261,7 @@ btnReset.addEventListener("click", () => {
 
 btnReload.addEventListener("click", () => {
   applyFilters();
-  toast({ title:"Info", message:"Tabel di-refresh (re-render)." });
+  toast({ title:"Info", message:"Re-render selesai." });
 });
 
 btnLogout.addEventListener("click", async () => {
@@ -178,32 +274,40 @@ async function getMyProfile(uid){
   return snap.exists() ? snap.data() : null;
 }
 
-function showSkeleton(){
-  txBody.innerHTML = `<tr><td colspan="5">
-    <div style="padding: 12px;">
-      <div class="skeleton skelLine" style="width: 65%"></div>
-      <div class="skeleton skelLine" style="width: 92%"></div>
-      <div class="skeleton skelLine" style="width: 86%"></div>
-    </div>
-  </td></tr>`;
-}
-
 onAuthStateChanged(auth, async (user) => {
   if (!user) return location.href = "login.html";
   setSortIcon(sortField);
-  showSkeleton();
 
   const prof = await getMyProfile(user.uid);
   const label = prof ? (prof.displayName || prof.username) : "User";
   elWho.textContent = `Halo, ${label}`;
   if (prof?.role === "admin") adminLink.style.display = "inline-flex";
 
-  // realtime transactions for this user
-  if (unsub) unsub();
+  if (unsubIdr) unsubIdr();
+  if (unsubPT) unsubPT();
+  if (unsubP) unsubP();
 
+  // pockets
+  const qP = query(collection(db, "pockets"), where("ownerUid", "==", user.uid));
+  unsubP = onSnapshot(qP, (snap) => {
+    pockets = snap.docs.map(d => {
+      const x = d.data();
+      return {
+        id: d.id,
+        currency: String(x.currency || "").toUpperCase(),
+        rate: Number(x.rate || 0),
+        balance: Number(x.balance || 0),
+        isActive: Boolean(x.isActive !== false)
+      };
+    }).filter(p => p.isActive).sort((a,b)=>a.currency.localeCompare(b.currency));
+
+    renderPocketCards();
+  });
+
+  // IDR transactions
   const qTx = query(collection(db, "transactions"), where("ownerUid", "==", user.uid));
-  unsub = onSnapshot(qTx, (snap) => {
-    rawTx = snap.docs.map(d => {
+  unsubIdr = onSnapshot(qTx, (snap) => {
+    rawIdrTx = snap.docs.map(d => {
       const data = d.data();
       return {
         id: d.id,
@@ -211,11 +315,30 @@ onAuthStateChanged(auth, async (user) => {
         type: data.type,
         amount: Number(data.amount || 0),
         note: data.note || "",
+        createdAt: data.createdAt || null,
         isDeleted: Boolean(data.isDeleted)
       };
     });
     applyFilters();
-  }, (err) => {
-    toast({ title:"Gagal load transaksi", message: err.message || "Cek rules/index.", type:"err" });
-  });
+  }, (err) => toast({ title:"Gagal load IDR tx", message: err.message || "Cek rules.", type:"err" }));
+
+  // pocket_transactions (ownerUid only; no composite index)
+  const qPT = query(collection(db, "pocket_transactions"), where("ownerUid", "==", user.uid));
+  unsubPT = onSnapshot(qPT, (snap) => {
+    rawPocketTx = snap.docs.map(d => {
+      const x = d.data();
+      return {
+        id: d.id,
+        date: x.date,
+        type: x.type,
+        amount: Number(x.amount || 0),
+        currency: x.currency,
+        idrAmount: Number(x.idrAmount || 0),
+        rate: Number(x.rate || 0),
+        note: x.note || "",
+        isDeleted: Boolean(x.isDeleted)
+      };
+    });
+    applyFilters();
+  }, (err) => toast({ title:"Gagal load pocket tx", message: err.message || "Cek rules.", type:"err" }));
 });
