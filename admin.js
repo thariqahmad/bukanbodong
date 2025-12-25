@@ -1240,7 +1240,7 @@ btnDoFxSell?.addEventListener("click", async () => {
     const EPS = 0.0005;
     if (amt > (p.balance + EPS)) throw new Error("Nominal melebihi saldo pocket yang tersedia.");
 
-    const idr = amt * sellRate;
+    const idr = Math.round(amt * sellRate); // simpan IDR sebagai integer rupiah
 
     // 1) Pocket berkurang (catat fx_sell)
     await addDoc(collection(db, "pocket_transactions"), {
