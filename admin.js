@@ -107,6 +107,7 @@ const fxSellAmount = document.getElementById("fxSellAmount");
 const fxSellBalHint = document.getElementById("fxSellBalHint");
 const fxSellResult = document.getElementById("fxSellResult");
 const fxSellRateHint = document.getElementById("fxSellRateHint");
+const fxSellRate = document.getElementById("fxSellRate");
 const fxSellNote = document.getElementById("fxSellNote");
 
 /** ---------- State ---------- */
@@ -1152,7 +1153,8 @@ btnFxSell?.addEventListener("click", () => {
   fxSellAmount.value = "";
   fxSellResult.value = "";
   fxSellNote.value = "";
-  fxSellRateHint.textContent = "Rate: —";
+  fxSellRate.value = "";
+  fxSellRateHint.textContent = "Kurs default pocket: —";
   fxSellBalHint.textContent = "Saldo pocket: —";
   openFxSellModal();
 });
@@ -1164,15 +1166,22 @@ fxSellModal?.addEventListener("click", (e) => { if (e.target === fxSellModal) cl
 function calcFxSellPreview(){
   const pid = fxSellPocket.value;
   const p = pockets.find(x => x.id === pid);
+
   if (!p){
-    fxSellRateHint.textContent = "Rate: —";
+    fxSellRateHint.textContent = "Kurs default pocket: —";
     fxSellBalHint.textContent = "Saldo pocket: —";
+    if (fxSellRate) fxSellRate.value = "";
     fxSellResult.value = "";
     return;
   }
 
-  fxSellRateHint.textContent = `Rate: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
+  fxSellRateHint.textContent = `Kurs default pocket: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
   fxSellBalHint.textContent = `Saldo pocket: ${fmtCurrency(p.currency, p.balance)}`;
+
+  // auto-isi kurs jual pertama kali kalau masih kosong
+  if (fxSellRate && !String(fxSellRate.value || "").trim()){
+    fxSellRate.value = String(p.rate);
+  }
 
   const amt = parseFx2(fxSellAmount.value);
   if (amt <= 0){
@@ -1180,12 +1189,19 @@ function calcFxSellPreview(){
     return;
   }
 
-  const idr = amt * p.rate;
+  const sellRate = Number(String(fxSellRate?.value || "").replace(/[^\d]/g,"")) || 0;
+  if (sellRate <= 0){
+    fxSellResult.value = "";
+    return;
+  }
+
+  const idr = amt * sellRate;
   fxSellResult.value = fmtIDR(idr);
 }
 
 fxSellPocket?.addEventListener("change", calcFxSellPreview);
 fxSellAmount?.addEventListener("input", debounce(calcFxSellPreview, 120));
+fxSellRate?.addEventListener("input", debounce(calcFxSellPreview, 120));
 
 btnDoFxSell?.addEventListener("click", async () => {
   try{
@@ -1194,7 +1210,9 @@ btnDoFxSell?.addEventListener("click", async () => {
     if (!p) throw new Error("Pilih pocket dulu.");
 
     const date = fxSellDate.value;
-    const amt = Number(String(fxSellAmount.value || "").replace(",", ".")) || 0;
+    const amt = parseFx2(fxSellAmount.value);
+    const sellRate = Number(String(fxSellRate?.value || "").replace(/[^\d]/g,"")) || 0;
+    if (sellRate <= 0) throw new Error("Kurs jual harus > 0.");
     const note = (fxSellNote.value || "").trim() || `Konversi ${p.currency} → IDR`;
 
     if (!date) throw new Error("Tanggal wajib.");
@@ -1202,7 +1220,7 @@ btnDoFxSell?.addEventListener("click", async () => {
     const EPS = 0.0005;
     if (amt > (p.balance + EPS)) throw new Error("Nominal melebihi saldo pocket yang tersedia.");
 
-    const idr = amt * p.rate;
+    const idr = amt * sellRate;
 
     // 1) Pocket berkurang (catat fx_sell)
     await addDoc(collection(db, "pocket_transactions"), {
@@ -1213,7 +1231,7 @@ btnDoFxSell?.addEventListener("click", async () => {
       type: "fx_sell",
       amount: amt,
       idrAmount: idr,
-      rate: p.rate,
+      rate: sellRate,
       note,
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser.uid,
@@ -1233,7 +1251,7 @@ btnDoFxSell?.addEventListener("click", async () => {
       date,
       type: "in",
       amount: idr,
-      note: `Hasil konversi ${p.currency} (${note})`,
+      note: `Hasil konversi ${p.currency} @ ${fmtIDR(sellRate)} (${note})`,
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser.uid,
       isDeleted: false

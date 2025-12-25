@@ -339,19 +339,26 @@
         </div>
       </div>
 
-      <div class="split2">
+        <div class="split2">
         <div class="field">
-          <div class="label">Forex that is converted</div>
-          <input id="fxSellAmount" class="input" inputmode="decimal" placeholder="mis: 5"/>
-          <div class="smallNote" id="fxSellBalHint">Pocket balance: —</div>
+            <div class="label">Converted Forex</div>
+            <input id="fxSellAmount" class="input" inputmode="decimal" placeholder="mis: 5"/>
+            <div class="smallNote" id="fxSellBalHint">Pocket balance: —</div>
         </div>
 
         <div class="field">
-          <div class="label">IDR results</div>
-          <input id="fxSellResult" class="input" disabled placeholder="—"/>
-          <div class="smallNote" id="fxSellRateHint">Rate: —</div>
+            <div class="label">Sell rate (IDR per 1 unit)</div>
+            <input id="fxSellRate" class="input" inputmode="numeric" placeholder="mis: 15500"/>
+            <div class="smallNote" id="fxSellRateHint">Default pocket rate: —</div>
         </div>
-      </div>
+        </div>
+
+        <div class="field">
+        <div class="label">IDR Result</div>
+        <input id="fxSellResult" class="input" disabled placeholder="—"/>
+        <div class="smallNote">Calculated amount from sell rate you input.</div>
+        </div>
+
 
       <div class="field">
         <div class="label">Note</div>
