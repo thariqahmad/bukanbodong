@@ -868,13 +868,18 @@ if (pocketWrap){
     const p = pockets.find(x => x.id === pid);
     if (!p) return;
 
-    if (p.balance > 0){
-      toast({
+    const balRounded = Math.round(Number(p.balance || 0) * 100) / 100; // paksa 2 digit
+    const EPS = 0.0005; // toleransi kecil
+
+    if (balRounded > EPS){
+    toast({
         title: "Ditolak",
-        message: `Pocket ${p.currency} masih memiliki saldo ${fmtCurrency(p.currency, p.balance)}. Habiskan/jual dulu sampai 0 sebelum dihapus.`,
+        message: `Pocket ${p.currency} masih memiliki saldo ${fmtCurrency(p.currency, balRounded)}. Habiskan/jual dulu sampai 0 sebelum dihapus.`,
         type: "err"
-      });
-      return;
+    });
+
+    return;
+
     }
 
     const ok = confirm(`Hapus pocket ${p.currency}? Pocket akan disembunyikan dari user, histori tetap ada.`);
@@ -882,6 +887,7 @@ if (pocketWrap){
 
     try{
       await updateDoc(doc(db, "pockets", pid), {
+        balance: 0,
         isActive: false,
         updatedAt: serverTimestamp(),
         updatedBy: auth.currentUser.uid
@@ -928,8 +934,8 @@ btnSaveModal.addEventListener("click", async () => {
     } else {
       const p = getPocketByCurrency(cur);
       if (!p) throw new Error("Pocket tidak ditemukan. Buat pocket dulu.");
-      const amount = Number(String(mAmountFX.value || "").replace(",", ".")) || 0;
-      if (!Number.isFinite(amount) || amount <= 0) throw new Error(`Nominal ${cur} harus > 0.`);
+      const amount = parseFx2(mAmountFX.value);
+      if (amount <= 0) throw new Error(`Nominal ${cur} harus > 0.`);
 
       if (!editingId){
         await createPocketTx({ pocketId: p.id, currency: cur, date, type, amount, note });
@@ -1168,7 +1174,7 @@ function calcFxSellPreview(){
   fxSellRateHint.textContent = `Rate: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
   fxSellBalHint.textContent = `Saldo pocket: ${fmtCurrency(p.currency, p.balance)}`;
 
-  const amt = Number(String(fxSellAmount.value || "").replace(",", ".")) || 0;
+  const amt = parseFx2(fxSellAmount.value);
   if (amt <= 0){
     fxSellResult.value = "";
     return;
@@ -1193,7 +1199,8 @@ btnDoFxSell?.addEventListener("click", async () => {
 
     if (!date) throw new Error("Tanggal wajib.");
     if (!Number.isFinite(amt) || amt <= 0) throw new Error(`Nominal ${p.currency} harus > 0.`);
-    if (amt > p.balance + 1e-9) throw new Error("Nominal melebihi saldo pocket yang tersedia.");
+    const EPS = 0.0005;
+    if (amt > (p.balance + EPS)) throw new Error("Nominal melebihi saldo pocket yang tersedia.");
 
     const idr = amt * p.rate;
 
@@ -1215,7 +1222,7 @@ btnDoFxSell?.addEventListener("click", async () => {
 
     // 2) Update saldo pocket
     await updateDoc(doc(db, "pockets", p.id), {
-      balance: p.balance - amt,
+      balance: Math.round((p.balance - amt) * 100) / 100,
       updatedAt: serverTimestamp(),
       updatedBy: auth.currentUser.uid
     });
@@ -1282,7 +1289,7 @@ btnDoFx?.addEventListener("click", async () => {
     const { bal } = computeIdrKpis(allIdrTx);
     if (idr > bal) throw new Error("Nominal melebihi saldo IDR yang tersedia.");
 
-    const fx = idr / p.rate;
+    const fx = Math.round((idr / p.rate) * 100) / 100;
 
     // 1) buat transaksi IDR out
     await createIdrTx({
@@ -1310,7 +1317,7 @@ btnDoFx?.addEventListener("click", async () => {
 
     // 3) update pocket balance
     await updateDoc(doc(db, "pockets", p.id), {
-      balance: p.balance + fx,
+      balance: Math.round((p.balance + fx) * 100) / 100,
       updatedAt: serverTimestamp(),
       updatedBy: auth.currentUser.uid
     });

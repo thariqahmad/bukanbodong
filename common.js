@@ -141,3 +141,16 @@ export function fmtCurrency(code, amount){
 export function toISODateToday(){
   return new Date().toISOString().slice(0,10);
 }
+
+export function round2(n){
+  const x = Number(n);
+  if (!Number.isFinite(x)) return 0;
+  return Math.round(x * 100) / 100;
+}
+
+export function parseFx2(input){
+  const s = String(input ?? "").trim().replace(",", ".");
+  const v = Number(s);
+  if (!Number.isFinite(v)) return 0;
+  return round2(v);
+}
