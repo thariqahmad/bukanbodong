@@ -325,10 +325,10 @@ th .sortIcon{ opacity:.85; margin-left: 6px; }
 /* Footer */
 .footer{
   margin-top: 18px;
-  padding: 14px 12px 6px;
+  padding: 14px 12px 22px; /* baris terakhir = jarak ke bawah */
   text-align: center;
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 .footer strong{ color: var(--txt); font-weight: 800; }
