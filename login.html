@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Login • Tabungan</title>
-  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="ui.css"/>
 </head>
 <body>
   <div class="wrap">
@@ -12,33 +12,37 @@
       <div class="brand">
         <div class="dot"></div>
         <div>
-          <div class="title">BukanBodong.</div>
+          <div class="title">Tabungan Transparan</div>
           <div class="sub">Login</div>
         </div>
       </div>
       <a class="btn" href="register.html">Register</a>
     </div>
 
-    <div class="card" style="max-width:520px;">
+    <div class="card" style="max-width:560px;">
       <div class="h1">Masuk</div>
-      <div class="muted">Login pakai <b>username</b> + <b>password</b>.</div>
+      <div class="muted">Gunakan <b>username</b> dan <b>password</b>.</div>
 
       <div class="field">
-        <label class="muted">Username</label>
-        <input id="username" class="input" placeholder="misal: adik / admin" />
+        <div class="label">Username</div>
+        <input id="username" class="input" placeholder="misal: adik / admin" autocomplete="username"/>
       </div>
 
       <div class="field">
-        <label class="muted">Password</label>
-        <input id="password" class="input" type="password" placeholder="••••••••" />
+        <div class="label">Password</div>
+        <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"/>
       </div>
 
       <div class="row" style="margin-top:14px;">
         <button id="btnLogin" class="btn primary">Login</button>
         <a class="btn" href="register.html">Buat akun</a>
+        <span class="right pill" id="hint">—</span>
       </div>
 
-      <div id="msg" class="toast">—</div>
+      <div id="skel" style="margin-top:10px; display:none;">
+        <div class="skeleton skelLine"></div>
+        <div class="skeleton skelLine" style="width:70%"></div>
+      </div>
     </div>
   </div>
 

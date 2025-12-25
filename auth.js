@@ -1,23 +1,30 @@
 // auth.js (ES module)
-import { auth, db, usernameToEmail } from "./common.js";
+import { auth, db, usernameToEmail, toast } from "./common.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
+  deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
-  doc, setDoc, getDoc
+  doc, getDoc, setDoc, runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const isRegister = location.pathname.endsWith("register.html") || location.href.includes("register.html");
-const isLogin = location.pathname.endsWith("login.html") || location.href.includes("login.html");
+const path = location.pathname.toLowerCase();
+const isRegister = path.endsWith("register.html");
+const isLogin = path.endsWith("login.html");
 
-function setMsg(text, cls=""){
-  const el = document.getElementById("msg");
-  if (!el) return;
-  el.className = "toast " + cls;
-  el.textContent = text;
+const elSkel = document.getElementById("skel");
+const elHint = document.getElementById("hint");
+
+function setLoading(on){
+  if (elSkel) elSkel.style.display = on ? "block" : "none";
+  if (elHint) elHint.textContent = on ? "Memproses…" : "—";
+}
+
+function normUsername(u){
+  return String(u || "").trim().toLowerCase();
 }
 
 async function routeByRole(uid){
@@ -26,50 +33,90 @@ async function routeByRole(uid){
   location.href = role === "admin" ? "admin.html" : "user.html";
 }
 
+async function createProfileAndIndex({ uid, username, displayName, role }){
+  const uname = normUsername(username);
+  const indexRef = doc(db, "username_index", uname);
+  const userRef = doc(db, "users", uid);
+
+  await runTransaction(db, async (tx) => {
+    const idxSnap = await tx.get(indexRef);
+    if (idxSnap.exists()) {
+      throw new Error("USERNAME_TAKEN");
+    }
+    tx.set(indexRef, { uid, createdAt: serverTimestamp() });
+    tx.set(userRef, {
+      username: uname,
+      displayName: String(displayName || "").trim() || null,
+      role,
+      active: true,
+      createdAt: serverTimestamp()
+    });
+  });
+}
+
 if (isRegister){
   document.getElementById("btnReg").addEventListener("click", async () => {
-    const username = document.getElementById("username").value.trim();
+    const username = document.getElementById("username").value;
+    const displayName = document.getElementById("displayName").value;
     const password = document.getElementById("password").value;
     const role = document.getElementById("role").value;
 
-    if (username.length < 3) return setMsg("Username minimal 3 karakter.", "err");
-    if (password.length < 6) return setMsg("Password minimal 6 karakter.", "err");
+    const uname = normUsername(username);
 
-    setMsg("Membuat akun…");
+    if (uname.length < 3) return toast({ title:"Gagal", message:"Username minimal 3 karakter.", type:"err" });
+    if (!/^[a-z0-9._-]+$/.test(uname)) return toast({ title:"Gagal", message:"Username hanya boleh huruf kecil/angka/titik/strip/underscore.", type:"err" });
+    if ((password || "").length < 6) return toast({ title:"Gagal", message:"Password minimal 6 karakter.", type:"err" });
 
-    const email = usernameToEmail(username);
+    setLoading(true);
 
     try{
+      const email = usernameToEmail(uname);
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, "users", cred.user.uid), { username, role });
-      setMsg("Register sukses. Mengarahkan…", "ok");
+
+      try{
+        await createProfileAndIndex({ uid: cred.user.uid, username: uname, displayName, role });
+      }catch(e){
+        // kalau username sudah dipakai, hapus user Auth yg baru dibuat
+        if (String(e.message).includes("USERNAME_TAKEN")) {
+          await deleteUser(cred.user);
+          throw new Error("Username sudah dipakai. Coba yang lain.");
+        }
+        // kalau error lain, biarkan
+        throw e;
+      }
+
+      toast({ title:"Sukses", message:"Akun dibuat. Mengarahkan…" });
       await routeByRole(cred.user.uid);
+
     }catch(e){
-      setMsg("Gagal: " + e.message, "err");
+      toast({ title:"Gagal", message: e.message || "Register gagal.", type:"err" });
+    }finally{
+      setLoading(false);
     }
   });
 }
 
 if (isLogin){
   document.getElementById("btnLogin").addEventListener("click", async () => {
-    const username = document.getElementById("username").value.trim();
+    const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+    const uname = normUsername(username);
 
-    if (!username || !password) return setMsg("Isi username dan password.", "err");
-    setMsg("Login…");
+    if (!uname || !password) return toast({ title:"Gagal", message:"Isi username dan password.", type:"err" });
 
-    const email = usernameToEmail(username);
-
+    setLoading(true);
     try{
+      const email = usernameToEmail(uname);
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      setMsg("Login sukses. Mengarahkan…", "ok");
+      toast({ title:"Sukses", message:"Login berhasil. Mengarahkan…" });
       await routeByRole(cred.user.uid);
     }catch(e){
-      setMsg("Login gagal: " + e.message, "err");
+      toast({ title:"Login gagal", message: e.message || "Periksa username/password.", type:"err" });
+    }finally{
+      setLoading(false);
     }
   });
 
-  // auto-route kalau sudah login
   onAuthStateChanged(auth, async (user) => {
     if (user) routeByRole(user.uid);
   });

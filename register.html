@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Register • Tabungan</title>
-  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="ui.css"/>
 </head>
 <body>
   <div class="wrap">
@@ -13,41 +13,55 @@
         <div class="dot"></div>
         <div>
           <div class="title">Tabungan Transparan</div>
-          <div class="sub">Register akun</div>
+          <div class="sub">Register</div>
         </div>
       </div>
       <a class="btn" href="login.html">Login</a>
     </div>
 
-    <div class="card" style="max-width:520px;">
+    <div class="card" style="max-width:640px;">
       <div class="h1">Buat akun</div>
-      <div class="muted">Pakai <b>username</b> dan <b>password</b>.</div>
+      <div class="muted">Untuk pemula: buat <b>admin</b> dulu, lalu buat akun <b>adik</b>.</div>
 
-      <div class="field">
-        <label class="muted">Username</label>
-        <input id="username" class="input" placeholder="misal: adik / admin" />
+      <div class="split2">
+        <div class="field">
+          <div class="label">Username</div>
+          <input id="username" class="input" placeholder="misal: adik" autocomplete="username"/>
+          <div class="smallNote">Gunakan huruf/angka. Nanti login pakai username ini.</div>
+        </div>
+
+        <div class="field">
+          <div class="label">Display name (opsional)</div>
+          <input id="displayName" class="input" placeholder="misal: Dinda"/>
+        </div>
       </div>
 
-      <div class="field">
-        <label class="muted">Password</label>
-        <input id="password" class="input" type="password" placeholder="min. 6 karakter" />
-      </div>
+      <div class="split2">
+        <div class="field">
+          <div class="label">Password</div>
+          <input id="password" class="input" type="password" placeholder="min 6 karakter" autocomplete="new-password"/>
+        </div>
 
-      <div class="field">
-        <label class="muted">Role</label>
-        <select id="role">
-          <option value="user">User (Adik)</option>
-          <option value="admin">Admin (Saya)</option>
-        </select>
-        <div class="muted" style="font-size:12px;">Saran: buat akun admin dulu, lalu buat akun adik.</div>
+        <div class="field">
+          <div class="label">Role</div>
+          <select id="role">
+            <option value="user">User (Adik)</option>
+            <option value="admin">Admin (Saya)</option>
+          </select>
+          <div class="smallNote">Saran keamanan: role admin sebaiknya dibuat sekali saja.</div>
+        </div>
       </div>
 
       <div class="row" style="margin-top:14px;">
         <button id="btnReg" class="btn primary">Register</button>
         <a class="btn" href="login.html">Sudah punya akun</a>
+        <span class="right pill" id="hint">—</span>
       </div>
 
-      <div id="msg" class="toast">—</div>
+      <div id="skel" style="margin-top:10px; display:none;">
+        <div class="skeleton skelLine"></div>
+        <div class="skeleton skelLine" style="width:72%"></div>
+      </div>
     </div>
   </div>
 

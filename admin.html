@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Admin • Tabungan</title>
-  <link rel="stylesheet" href="ui.css" />
+  <link rel="stylesheet" href="ui.css"/>
 </head>
 <body>
   <div class="wrap">
@@ -16,88 +16,186 @@
           <div class="sub" id="who">—</div>
         </div>
       </div>
+
       <div class="row">
-        <a class="btn" href="user.html">Lihat mode user</a>
-        <button id="btnLogout" class="btn">Logout</button>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <div class="h1">Tambah transaksi</div>
-        <div class="muted">Admin bisa input histori cashflow.</div>
-
-        <div class="field">
-          <label class="muted">Username target (adik)</label>
-          <input id="targetUsername" class="input" placeholder="misal: adik" />
-        </div>
-
-        <div class="row">
-          <div class="field" style="flex:1;">
-            <label class="muted">Tanggal</label>
-            <input id="date" class="input" type="date" />
-          </div>
-          <div class="field" style="flex:1;">
-            <label class="muted">Tipe</label>
-            <select id="type">
-              <option value="in">Masuk (Nabung)</option>
-              <option value="out">Keluar (Dipakai)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field" style="flex:1;">
-            <label class="muted">Nominal</label>
-            <input id="amount" class="input" inputmode="numeric" placeholder="contoh: 15000" />
-          </div>
-          <div class="field" style="flex:2;">
-            <label class="muted">Catatan</label>
-            <input id="note" class="input" placeholder="contoh: jajan / buku" />
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:14px;">
-          <button id="btnAdd" class="btn primary">Simpan</button>
-          <button id="btnRefresh" class="btn">Refresh tabel</button>
-        </div>
-
-        <div id="msg" class="toast">—</div>
-      </div>
-
-      <div class="card">
-        <div class="h1">Ringkasan</div>
-        <div class="muted">Saldo target dihitung dari histori.</div>
-        <div class="balance" id="balance">—</div>
-        <div class="row">
-          <span class="pill" id="sumIn">Masuk: —</span>
-          <span class="pill" id="sumOut">Keluar: —</span>
-        </div>
+        <span class="badge live" id="liveBadge">Live</span>
+        <a class="btn" href="user.html">Mode user</a>
+        <button class="btn" id="btnLogout">Logout</button>
       </div>
     </div>
 
     <div class="card">
-      <div class="row">
+      <div class="row space gap2">
         <div>
-          <div class="title">Histori (target)</div>
-          <div class="sub">Transaksi username target</div>
+          <div class="h1" style="margin:0;">Kelola transaksi</div>
+          <div class="muted">Pilih target, lalu tambah/edit/hapus transaksi. Semua update realtime.</div>
         </div>
-        <span class="pill" id="status">—</span>
+
+        <div class="row">
+          <div class="field" style="margin:0; min-width:260px;">
+            <div class="label">Target (dropdown)</div>
+            <select id="targetSelect"></select>
+          </div>
+          <div class="field" style="margin:0; min-width:240px;">
+            <div class="label">Cari target (opsional)</div>
+            <input id="targetSearch" class="input" placeholder="ketik nama/username…"/>
+          </div>
+        </div>
       </div>
 
-      <div class="tableWrap">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="k">Saldo</div>
+          <div class="v" id="kSaldo">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Total Masuk</div>
+          <div class="v" id="kIn">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k">Total Keluar</div>
+          <div class="v" id="kOut">—</div>
+        </div>
+      </div>
+
+      <hr/>
+
+      <div class="row space">
+        <div class="row">
+          <button class="btn primary" id="btnAdd">+ Tambah transaksi</button>
+          <button class="btn" id="btnReload">Reload</button>
+          <label class="pill" style="cursor:pointer;">
+            <input id="toggleShowDeleted" type="checkbox" style="accent-color: var(--accent);"/>
+            Tampilkan deleted
+          </label>
+        </div>
+
+        <div class="row">
+          <div class="field" style="margin:0; min-width:160px;">
+            <div class="label">Bulan</div>
+            <select id="filterMonth">
+              <option value="">Semua</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0; min-width:160px;">
+            <div class="label">Tipe</div>
+            <select id="filterType">
+              <option value="">Semua</option>
+              <option value="in">Masuk</option>
+              <option value="out">Keluar</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0; min-width:240px;">
+            <div class="label">Search note</div>
+            <input id="filterSearch" class="input" placeholder="mis: makan, buku…"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="tableWrap" id="tableWrap">
         <table>
           <thead>
             <tr>
-              <th>Tanggal</th>
-              <th>Catatan</th>
-              <th class="right">Masuk</th>
-              <th class="right">Keluar</th>
-              <th class="right">Saldo</th>
+              <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
+              <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
+              <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
+              <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
+              <th class="num">Saldo berjalan</th>
+              <th class="num">Aksi</th>
             </tr>
           </thead>
-          <tbody id="txBody"><tr><td colspan="5">—</td></tr></tbody>
+          <tbody id="txBody">
+            <tr><td colspan="6">
+              <div class="empty">
+                <div class="emoji">⏳</div>
+                <div class="big">Memuat data…</div>
+                <div>Silakan tunggu sebentar.</div>
+              </div>
+            </td></tr>
+          </tbody>
         </table>
+      </div>
+
+      <div class="muted" style="margin-top:10px;" id="meta">—</div>
+    </div>
+  </div>
+
+  <!-- Modal Add/Edit -->
+  <div class="modalOverlay" id="txModal">
+    <div class="modal">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="modalTitle">Tambah transaksi</div>
+          <div class="muted" id="modalSub">—</div>
+        </div>
+        <button class="btn icon ghost" id="btnCloseModal">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="split2">
+          <div class="field" style="margin-top:0;">
+            <div class="label">Tanggal</div>
+            <input id="mDate" class="input" type="date"/>
+          </div>
+
+          <div class="field" style="margin-top:0;">
+            <div class="label">Tipe</div>
+            <select id="mType">
+              <option value="in">Masuk</option>
+              <option value="out">Keluar</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="split2">
+          <div class="field">
+            <div class="label">Nominal</div>
+            <input id="mAmount" class="input" inputmode="numeric" placeholder="mis: 88.000"/>
+          </div>
+          <div class="field">
+            <div class="label">Catatan</div>
+            <input id="mNote" class="input" placeholder="mis: uang makan"/>
+          </div>
+        </div>
+
+        <div class="muted" id="modalHint" style="margin-top:10px;">—</div>
+      </div>
+
+      <div class="modalFooter">
+        <button class="btn" id="btnCancelModal">Batal</button>
+        <button class="btn bad" id="btnHardDelete" style="display:none;">Hapus permanen</button>
+        <button class="btn" id="btnRestore" style="display:none;">Restore</button>
+        <button class="btn primary" id="btnSaveModal">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm delete -->
+  <div class="modalOverlay" id="confirmModal">
+    <div class="modal" style="max-width:560px;">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle">Konfirmasi hapus</div>
+          <div class="muted">Transaksi akan disembunyikan dari user (soft delete). Bisa restore dari admin.</div>
+        </div>
+        <button class="btn icon ghost" id="btnCloseConfirm">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="card" style="box-shadow:none; background: rgba(255,255,255,.04);">
+          <div class="muted">Yang akan dihapus:</div>
+          <div style="font-weight:900; margin-top:6px;" id="confirmText">—</div>
+        </div>
+
+        <label class="pill" style="cursor:pointer; margin-top:12px;">
+          <input id="confirmCheck" type="checkbox" style="accent-color: var(--accent);"/>
+          Saya yakin dan paham konsekuensinya
+        </label>
+      </div>
+
+      <div class="modalFooter">
+        <button class="btn" id="btnCancelConfirm">Batal</button>
+        <button class="btn bad" id="btnDoDelete" disabled>Hapus</button>
       </div>
     </div>
   </div>
