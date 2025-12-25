@@ -137,6 +137,28 @@ let deletingId = null;
 let deletingSource = null;
 
 attachMoneyMask(mAmount);
+function round2(n){
+  const x = Number(n);
+  if (!Number.isFinite(x)) return 0;
+  return Math.round(x * 100) / 100;
+}
+
+// untuk nominal VALAS: selalu dibulatkan 2 desimal
+function parseFx2(input){
+  const s = String(input ?? "").trim().replace(",", ".");
+  const v = Number(s);
+  if (!Number.isFinite(v)) return 0;
+  return round2(v);
+}
+
+// untuk KURS IDR per 1 unit: boleh desimal (contoh 4150.69)
+function parseRateIDR(input){
+  const raw = String(input ?? "").trim();
+  const cleaned = raw.replace(/[^0-9.,]/g, "").replace(",", ".");
+  const v = Number(cleaned);
+  if (!Number.isFinite(v)) return 0;
+  return v;
+}
 
 /** ---------- UI Helpers ---------- */
 function openModal(){ txModal.classList.add("open"); }
@@ -1166,11 +1188,9 @@ fxSellModal?.addEventListener("click", (e) => { if (e.target === fxSellModal) cl
 function calcFxSellPreview(){
   const pid = fxSellPocket.value;
   const p = pockets.find(x => x.id === pid);
-
   if (!p){
-    fxSellRateHint.textContent = "Kurs default pocket: —";
+    fxSellRateHint.textContent = "Rate: —";
     fxSellBalHint.textContent = "Saldo pocket: —";
-    if (fxSellRate) fxSellRate.value = "";
     fxSellResult.value = "";
     return;
   }
@@ -1178,7 +1198,7 @@ function calcFxSellPreview(){
   fxSellRateHint.textContent = `Kurs default pocket: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
   fxSellBalHint.textContent = `Saldo pocket: ${fmtCurrency(p.currency, p.balance)}`;
 
-  // auto-isi kurs jual pertama kali kalau masih kosong
+  // kalau kurs jual masih kosong, auto isi dari default pocket
   if (fxSellRate && !String(fxSellRate.value || "").trim()){
     fxSellRate.value = String(p.rate);
   }
@@ -1189,7 +1209,7 @@ function calcFxSellPreview(){
     return;
   }
 
-  const sellRate = Number(String(fxSellRate?.value || "").replace(/[^\d]/g,"")) || 0;
+  const sellRate = parseRateIDR(fxSellRate ? fxSellRate.value : "");
   if (sellRate <= 0){
     fxSellResult.value = "";
     return;
