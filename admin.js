@@ -218,41 +218,69 @@ function onCurrencyChange(){
 
 mCurrency?.addEventListener("change", onCurrencyChange);
 
+/** SAFE GUARDS */
+
 /** ---------- Pocket Cards ---------- */
+function setHTML(el, html){
+  if (el) el.innerHTML = html;
+}
+function setText(el, text){
+  if (el) el.textContent = text;
+}
+
 function renderPockets(){
+  // Guard: kalau DOM pocket section belum ada, jangan bikin crash
+  if (!pocketWrap || !pocketMeta) return;
+
+  // helper untuk dropdown (kalau elemennya ada)
+  function setPocketSelectOptions(selectEl, emptyLabel){
+    if (!selectEl) return;
+    if (!pockets.length){
+      selectEl.innerHTML = `<option value="">${emptyLabel}</option>`;
+      return;
+    }
+    selectEl.innerHTML =
+      `<option value="">— Pilih pocket —</option>` +
+      pockets.map(p => `<option value="${p.id}">${escapeHtml(p.currency)} (rate ${p.rate})</option>`).join("");
+  }
+
   if (!selectedOwnerUid){
-    pocketWrap.innerHTML = "";
-    pocketMeta.textContent = "Pilih target untuk melihat pocket.";
-    fxPocket.innerHTML = `<option value="">—</option>`;
+    setHTML(pocketWrap, "");
+    setText(pocketMeta, "Pilih target untuk melihat pocket.");
+    setPocketSelectOptions(fxPocket, "—");
+    setPocketSelectOptions(fxSellPocket, "—");
     return;
   }
+
   if (!pockets.length){
-    pocketWrap.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+    setHTML(pocketWrap, `<div class="empty" style="grid-column:1/-1;">
       <div class="emoji">💱</div>
       <div class="big">Belum ada pocket</div>
       <div>Tambah pocket dulu (USD/JPY/EUR, dll).</div>
-    </div>`;
-    pocketMeta.textContent = "—";
-    fxPocket.innerHTML = `<option value="">— tidak ada pocket —</option>`;
+    </div>`);
+    setText(pocketMeta, "—");
+    setPocketSelectOptions(fxPocket, "— tidak ada pocket —");
+    setPocketSelectOptions(fxSellPocket, "— tidak ada pocket —");
     return;
   }
 
-  pocketWrap.innerHTML = pockets.map(p => `
+  setHTML(pocketWrap, pockets.map(p => `
     <div class="kpi">
-      <div class="k">${escapeHtml(p.currency)} • Rate ${fmtIDR(p.rate)} / 1</div>
-      <div class="v">${fmtCurrency(p.currency, p.balance)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div>
+          <div class="k">${escapeHtml(p.currency)} • Rate ${fmtIDR(p.rate)} / 1</div>
+          <div class="v">${fmtCurrency(p.currency, p.balance)}</div>
+        </div>
+        <button class="btn icon bad" title="Hapus pocket" data-action="deletePocket" data-id="${p.id}">🗑️</button>
+      </div>
       <div class="muted" style="margin-top:6px;">Pocket aktif</div>
     </div>
-  `).join("");
+  `).join(""));
 
-  pocketMeta.textContent = `Total pocket: ${pockets.length}`;
-  fxPocket.innerHTML = `<option value="">— Pilih pocket —</option>` + pockets.map(p => (
-    `<option value="${p.id}">${escapeHtml(p.currency)} (rate ${p.rate})</option>`
-  )).join("");
+  setText(pocketMeta, `Total pocket: ${pockets.length}`);
 
-  fxSellPocket.innerHTML = `<option value="">— Pilih pocket —</option>` + pockets.map(p => (
-  `<option value="${p.id}">${escapeHtml(p.currency)} (rate ${p.rate})</option>`
-    )).join("");
+  setPocketSelectOptions(fxPocket, "—");
+  setPocketSelectOptions(fxSellPocket, "—");
 }
 
 /** ---------- Build Combined Timeline ---------- */
@@ -830,6 +858,40 @@ txBody.addEventListener("click", (e) => {
     openModal();
   }
 });
+
+if (pocketWrap){
+  pocketWrap.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-action='deletePocket']");
+    if (!btn) return;
+
+    const pid = btn.dataset.id;
+    const p = pockets.find(x => x.id === pid);
+    if (!p) return;
+
+    if (p.balance > 0){
+      toast({
+        title: "Ditolak",
+        message: `Pocket ${p.currency} masih memiliki saldo ${fmtCurrency(p.currency, p.balance)}. Habiskan/jual dulu sampai 0 sebelum dihapus.`,
+        type: "err"
+      });
+      return;
+    }
+
+    const ok = confirm(`Hapus pocket ${p.currency}? Pocket akan disembunyikan dari user, histori tetap ada.`);
+    if (!ok) return;
+
+    try{
+      await updateDoc(doc(db, "pockets", pid), {
+        isActive: false,
+        updatedAt: serverTimestamp(),
+        updatedBy: auth.currentUser.uid
+      });
+      toast({ title: "Sukses", message: `Pocket ${p.currency} dihapus (dinonaktifkan).` });
+    }catch(err){
+      toast({ title: "Gagal", message: err.message || "Gagal menghapus pocket.", type: "err" });
+    }
+  });
+}
 
 /** ---------- Modal buttons ---------- */
 btnAdd.addEventListener("click", () => {
