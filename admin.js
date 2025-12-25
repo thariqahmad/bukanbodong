@@ -92,6 +92,23 @@ const fxResult = document.getElementById("fxResult");
 const fxRateHint = document.getElementById("fxRateHint");
 const fxNote = document.getElementById("fxNote");
 
+/* FX Sell modal */
+const btnFxSell = document.getElementById("btnFxSell");
+
+const fxSellModal = document.getElementById("fxSellModal");
+const fxSellModalSub = document.getElementById("fxSellModalSub");
+const btnCloseFxSellModal = document.getElementById("btnCloseFxSellModal");
+const btnCancelFxSellModal = document.getElementById("btnCancelFxSellModal");
+const btnDoFxSell = document.getElementById("btnDoFxSell");
+
+const fxSellPocket = document.getElementById("fxSellPocket");
+const fxSellDate = document.getElementById("fxSellDate");
+const fxSellAmount = document.getElementById("fxSellAmount");
+const fxSellBalHint = document.getElementById("fxSellBalHint");
+const fxSellResult = document.getElementById("fxSellResult");
+const fxSellRateHint = document.getElementById("fxSellRateHint");
+const fxSellNote = document.getElementById("fxSellNote");
+
 /** ---------- State ---------- */
 let me = null;
 let myRole = "user";
@@ -149,6 +166,9 @@ function closePocketModal(){ pocketModal.classList.remove("open"); }
 
 function openFxModal(){ fxModal.classList.add("open"); }
 function closeFxModal(){ fxModal.classList.remove("open"); }
+
+function openFxSellModal(){ fxSellModal.classList.add("open"); }
+function closeFxSellModal(){ fxSellModal.classList.remove("open"); }
 
 function setSortIcon(field){
   const map = ["date","note","amount","currency","type"];
@@ -229,6 +249,10 @@ function renderPockets(){
   fxPocket.innerHTML = `<option value="">— Pilih pocket —</option>` + pockets.map(p => (
     `<option value="${p.id}">${escapeHtml(p.currency)} (rate ${p.rate})</option>`
   )).join("");
+
+  fxSellPocket.innerHTML = `<option value="">— Pilih pocket —</option>` + pockets.map(p => (
+  `<option value="${p.id}">${escapeHtml(p.currency)} (rate ${p.rate})</option>`
+    )).join("");
 }
 
 /** ---------- Build Combined Timeline ---------- */
@@ -251,10 +275,18 @@ function normalizeEvents(){
 
   for (const t of allPocketTx){
     const cur = String(t.currency || "").toUpperCase();
-    const normalizedType = (t.type === "fx_buy") ? "in" : t.type;
-    const noteExtra = (t.type === "fx_buy")
-      ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
-      : "";
+    const normalizedType =
+    (t.type === "fx_buy") ? "in" :
+    (t.type === "fx_sell") ? "out" :
+    t.type;
+
+    const noteExtra =
+    (t.type === "fx_buy")
+        ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        : (t.type === "fx_sell")
+        ? ` (Dikonversi menjadi ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        : "";
+
     events.push({
       source: "POCKET",
       id: t.id,
@@ -375,7 +407,7 @@ function renderTable(){
       runTxt = (v === undefined) ? "-" : fmtCurrency(e.currency, v);
     }
 
-    const isLocked = (e.source === "POCKET" && e.rawType === "fx_buy"); // konversi: no edit
+    const isLocked = (e.source === "POCKET" && (e.rawType === "fx_buy" || e.rawType === "fx_sell")); // konversi: no edit
     const editBtn = isLocked ? `<button class="btn icon" disabled title="Konversi tidak bisa diedit">🔒</button>` :
       `<button class="btn icon" data-action="edit" data-id="${e.id}" data-source="${e.source}">✏️</button>`;
 
@@ -1041,6 +1073,108 @@ btnFxConvert?.addEventListener("click", () => {
   fxRateHint.textContent = "Rate: —";
   fxIdrHint.textContent = `Saldo IDR tersedia: ${kSaldo.textContent || "—"}`;
   openFxModal();
+});
+
+btnFxSell?.addEventListener("click", () => {
+  if (!selectedOwnerUid) return toast({ title:"Gagal", message:"Pilih target dulu.", type:"err" });
+  if (!pockets.length) return toast({ title:"Gagal", message:"Belum ada pocket.", type:"err" });
+
+  fxSellModalSub.textContent = `Target: ${selectedOwnerLabel || "-"}`;
+  fxSellDate.value = toISODateToday();
+  fxSellAmount.value = "";
+  fxSellResult.value = "";
+  fxSellNote.value = "";
+  fxSellRateHint.textContent = "Rate: —";
+  fxSellBalHint.textContent = "Saldo pocket: —";
+  openFxSellModal();
+});
+
+btnCloseFxSellModal?.addEventListener("click", closeFxSellModal);
+btnCancelFxSellModal?.addEventListener("click", closeFxSellModal);
+fxSellModal?.addEventListener("click", (e) => { if (e.target === fxSellModal) closeFxSellModal(); });
+
+function calcFxSellPreview(){
+  const pid = fxSellPocket.value;
+  const p = pockets.find(x => x.id === pid);
+  if (!p){
+    fxSellRateHint.textContent = "Rate: —";
+    fxSellBalHint.textContent = "Saldo pocket: —";
+    fxSellResult.value = "";
+    return;
+  }
+
+  fxSellRateHint.textContent = `Rate: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
+  fxSellBalHint.textContent = `Saldo pocket: ${fmtCurrency(p.currency, p.balance)}`;
+
+  const amt = Number(String(fxSellAmount.value || "").replace(",", ".")) || 0;
+  if (amt <= 0){
+    fxSellResult.value = "";
+    return;
+  }
+
+  const idr = amt * p.rate;
+  fxSellResult.value = fmtIDR(idr);
+}
+
+fxSellPocket?.addEventListener("change", calcFxSellPreview);
+fxSellAmount?.addEventListener("input", debounce(calcFxSellPreview, 120));
+
+btnDoFxSell?.addEventListener("click", async () => {
+  try{
+    const pid = fxSellPocket.value;
+    const p = pockets.find(x => x.id === pid);
+    if (!p) throw new Error("Pilih pocket dulu.");
+
+    const date = fxSellDate.value;
+    const amt = Number(String(fxSellAmount.value || "").replace(",", ".")) || 0;
+    const note = (fxSellNote.value || "").trim() || `Konversi ${p.currency} → IDR`;
+
+    if (!date) throw new Error("Tanggal wajib.");
+    if (!Number.isFinite(amt) || amt <= 0) throw new Error(`Nominal ${p.currency} harus > 0.`);
+    if (amt > p.balance + 1e-9) throw new Error("Nominal melebihi saldo pocket yang tersedia.");
+
+    const idr = amt * p.rate;
+
+    // 1) Pocket berkurang (catat fx_sell)
+    await addDoc(collection(db, "pocket_transactions"), {
+      ownerUid: selectedOwnerUid,
+      pocketId: p.id,
+      currency: p.currency,
+      date,
+      type: "fx_sell",
+      amount: amt,
+      idrAmount: idr,
+      rate: p.rate,
+      note,
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser.uid,
+      isDeleted: false
+    });
+
+    // 2) Update saldo pocket
+    await updateDoc(doc(db, "pockets", p.id), {
+      balance: p.balance - amt,
+      updatedAt: serverTimestamp(),
+      updatedBy: auth.currentUser.uid
+    });
+
+    // 3) IDR bertambah (catat transaksi IDR in)
+    await addDoc(collection(db, "transactions"), {
+      ownerUid: selectedOwnerUid,
+      date,
+      type: "in",
+      amount: idr,
+      note: `Hasil konversi ${p.currency} (${note})`,
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser.uid,
+      isDeleted: false
+    });
+
+    toast({ title:"Sukses", message:`Konversi: ${fmtCurrency(p.currency, amt)} → ${fmtIDR(idr)}` });
+    closeFxSellModal();
+  }catch(e){
+    toast({ title:"Gagal", message: e.message || "Konversi gagal.", type:"err" });
+  }
 });
 
 btnCloseFxModal?.addEventListener("click", closeFxModal);

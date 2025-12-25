@@ -68,6 +68,7 @@
     <div class="row">
         <button class="btn good" id="btnNewPocket">+ Tambah pocket</button>
         <button class="btn primary" id="btnFxConvert">Konversi IDR → Valas</button>
+        <button class="btn" id="btnFxSell">Konversi Valas → IDR</button>
     </div>
     </div>
 
@@ -311,6 +312,58 @@
     <div class="modalFooter">
       <button class="btn" id="btnCancelFxModal">Batal</button>
       <button class="btn primary" id="btnDoFx">Konversi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="fxSellModal">
+  <div class="modal">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle">Konversi Valas → IDR</div>
+        <div class="muted" id="fxSellModalSub">—</div>
+      </div>
+      <button class="btn icon ghost" id="btnCloseFxSellModal">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="split2">
+        <div class="field" style="margin-top:0;">
+          <div class="label">Pilih pocket</div>
+          <select id="fxSellPocket"></select>
+        </div>
+
+        <div class="field" style="margin-top:0;">
+          <div class="label">Tanggal</div>
+          <input id="fxSellDate" class="input" type="date"/>
+        </div>
+      </div>
+
+      <div class="split2">
+        <div class="field">
+          <div class="label">Valas yang dikonversi</div>
+          <input id="fxSellAmount" class="input" inputmode="decimal" placeholder="mis: 5"/>
+          <div class="smallNote" id="fxSellBalHint">Saldo pocket: —</div>
+        </div>
+
+        <div class="field">
+          <div class="label">Hasil IDR</div>
+          <input id="fxSellResult" class="input" disabled placeholder="—"/>
+          <div class="smallNote" id="fxSellRateHint">Rate: —</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Catatan</div>
+        <input id="fxSellNote" class="input" placeholder="mis: konversi untuk kebutuhan"/>
+      </div>
+
+      <div class="muted" style="margin-top:10px;">Konversi membuat 2 histori: valas keluar & IDR masuk.</div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn" id="btnCancelFxSellModal">Batal</button>
+      <button class="btn primary" id="btnDoFxSell">Konversi</button>
     </div>
   </div>
 </div>
