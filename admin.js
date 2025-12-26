@@ -153,11 +153,35 @@ function parseFx2(input){
 
 // untuk KURS IDR per 1 unit: boleh desimal (contoh 4150.69)
 function parseRateIDR(input){
-  const raw = String(input ?? "").trim();
-  const cleaned = raw.replace(/[^0-9.,]/g, "").replace(",", ".");
-  const v = Number(cleaned);
-  if (!Number.isFinite(v)) return 0;
-  return v;
+  let s = String(input ?? "").trim();
+  if (!s) return 0;
+
+  s = s.replace(/[^0-9.,]/g, "");
+
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+
+  if (hasDot && hasComma){
+    const lastDot = s.lastIndexOf(".");
+    const lastComma = s.lastIndexOf(",");
+
+    if (lastComma > lastDot){
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma){
+    s = s.replace(",", ".");
+  } else if (hasDot){
+    const parts = s.split(".");
+    const last = parts[parts.length - 1];
+    if (last.length === 3 && parts.length > 1){
+      s = s.replace(/\./g, "");
+    }
+  }
+
+  const v = Number(s);
+  return Number.isFinite(v) ? v : 0;
 }
 
 /** ---------- UI Helpers ---------- */
@@ -1128,7 +1152,7 @@ btnSavePocket?.addEventListener("click", async () => {
     if (!selectedOwnerUid) throw new Error("Pilih target dulu.");
 
     const cur = String(pCurrency.value || "").trim().toUpperCase();
-    const rate = Number(String(pRate.value || "").replace(/[^\d.]/g,"")) || 0;
+    const rate = parseRateIDR(pRate.value);
 
     if (!/^[A-Z]{3}$/.test(cur)) throw new Error("Currency code harus 3 huruf, contoh USD.");
     if (rate <= 0) throw new Error("Rate harus > 0.");
@@ -1231,7 +1255,7 @@ btnDoFxSell?.addEventListener("click", async () => {
 
     const date = fxSellDate.value;
     const amt = parseFx2(fxSellAmount.value);
-    const sellRate = Number(String(fxSellRate?.value || "").replace(/[^\d]/g,"")) || 0;
+    const sellRate = parseRateIDR(fxSellRate ? fxSellRate.value : "");
     if (sellRate <= 0) throw new Error("Kurs jual harus > 0.");
     const note = (fxSellNote.value || "").trim() || `Konversi ${p.currency} → IDR`;
 
