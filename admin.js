@@ -1128,7 +1128,7 @@ btnSavePocket?.addEventListener("click", async () => {
     if (!selectedOwnerUid) throw new Error("Pilih target dulu.");
 
     const cur = String(pCurrency.value || "").trim().toUpperCase();
-    const rate = parseRateIDR(pRate.value);
+    const rate = Number(String(pRate.value || "").replace(/[^\d.]/g,"")) || 0;
 
     if (!/^[A-Z]{3}$/.test(cur)) throw new Error("Currency code harus 3 huruf, contoh USD.");
     if (rate <= 0) throw new Error("Rate harus > 0.");
