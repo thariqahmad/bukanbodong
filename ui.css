@@ -164,8 +164,10 @@ hr {
 
 .grid {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  /* FIXED: Left flexible (1fr), Right adaptable but constrained (min 300px, max 350px) */
+  grid-template-columns: 1fr minmax(300px, 350px);
   gap: 24px;
+  align-items: start;
 }
 @media (max-width: 980px){
   .grid { grid-template-columns: 1fr; }
@@ -252,8 +254,20 @@ hr {
 
 /* --- Forms --- */
 
-.field { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; min-width: 240px; }
-.label { color: var(--txt-sec); font-size: 12px; font-weight: 500; margin-left: 2px; }
+.field { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  margin-top: 16px; 
+  width: 100%; /* Adapt to parent card width */
+}
+.label { 
+  color: var(--txt-sec); 
+  font-size: 12px; 
+  font-weight: 500; 
+  margin-left: 2px;
+  white-space: nowrap; /* Prevent label from wrapping */
+}
 
 .input, select {
   border: 1px solid var(--border);
@@ -265,6 +279,7 @@ hr {
   font-size: 14px;
   transition: all 0.2s;
   font-family: inherit;
+  width: 100%;
 }
 .input:hover, select:hover { border-color: rgba(255,255,255,0.12); }
 .input:focus, select:focus {
