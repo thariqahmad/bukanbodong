@@ -1128,7 +1128,7 @@ btnSavePocket?.addEventListener("click", async () => {
     if (!selectedOwnerUid) throw new Error("Pilih target dulu.");
 
     const cur = String(pCurrency.value || "").trim().toUpperCase();
-    const rate = Number(String(pRate.value || "").replace(/[^\d.]/g,"")) || 0;
+    const rate = parseRateIDR(pRate.value);
 
     if (!/^[A-Z]{3}$/.test(cur)) throw new Error("Currency code harus 3 huruf, contoh USD.");
     if (rate <= 0) throw new Error("Rate harus > 0.");
@@ -1223,6 +1223,47 @@ fxSellPocket?.addEventListener("change", calcFxSellPreview);
 fxSellAmount?.addEventListener("input", debounce(calcFxSellPreview, 120));
 fxSellRate?.addEventListener("input", debounce(calcFxSellPreview, 120));
 
+function parseRateIDR(input){
+  let s = String(input ?? "").trim();
+
+  if (!s) return 0;
+
+  // buang Rp, spasi, dll tapi biarkan angka + pemisah
+  s = s.replace(/[^0-9.,]/g, "");
+
+  const hasDot = s.includes(".");
+  const hasComma = s.includes(",");
+
+  if (hasDot && hasComma){
+    // pakai pemisah terakhir sebagai desimal
+    const lastDot = s.lastIndexOf(".");
+    const lastComma = s.lastIndexOf(",");
+
+    if (lastComma > lastDot){
+      // format ID: 4.150,69 -> 4150.69
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else {
+      // format US: 4,150.69 -> 4150.69
+      s = s.replace(/,/g, "");
+    }
+  } else if (hasComma){
+    // kalau cuma koma: anggap koma desimal (umumnya)
+    s = s.replace(",", ".");
+  } else if (hasDot){
+    // kalau cuma titik: bisa ribuan atau desimal
+    const parts = s.split(".");
+    const last = parts[parts.length - 1];
+    if (last.length === 3 && parts.length > 1){
+      // 4.150 -> 4150 (ribuan)
+      s = s.replace(/\./g, "");
+    }
+    // kalau 4150.69 biarkan
+  }
+
+  const v = Number(s);
+  return Number.isFinite(v) ? v : 0;
+}
+
 btnDoFxSell?.addEventListener("click", async () => {
   try{
     const pid = fxSellPocket.value;
@@ -1231,7 +1272,7 @@ btnDoFxSell?.addEventListener("click", async () => {
 
     const date = fxSellDate.value;
     const amt = parseFx2(fxSellAmount.value);
-    const sellRate = Number(String(fxSellRate?.value || "").replace(/[^\d]/g,"")) || 0;
+    const sellRate = parseRateIDR(fxSellRate ? fxSellRate.value : "");
     if (sellRate <= 0) throw new Error("Kurs jual harus > 0.");
     const note = (fxSellNote.value || "").trim() || `Konversi ${p.currency} → IDR`;
 
