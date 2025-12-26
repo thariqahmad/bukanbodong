@@ -8,6 +8,7 @@
 </head>
 <body>
   <div class="wrap">
+    <!-- Navigation -->
     <div class="nav">
       <div class="brand">
         <div class="dot"></div>
@@ -24,111 +25,123 @@
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="h1" style="margin:0;">Currect Balance</div>
-        <div class="muted">Real time update. Don't worry.</div>
+    <!-- Main Layout with Sidebar -->
+    <div class="main-layout">
+      <!-- Left Column: Main Content -->
+      <div class="main-content">
+        <!-- Current Balance Card -->
+        <div class="card">
+          <div class="h1" style="margin:0;">Current Balance</div>
+          <div class="muted">Real time update. Don't worry.</div>
 
-        <div class="kpis" style="margin-top:12px;">
-          <div class="kpi">
-            <div class="k">Saldo</div>
-            <div class="v" id="kSaldo">—</div>
+          <div class="kpis-wrapper">
+            <div class="kpis" style="margin-top:12px;">
+              <div class="kpi">
+                <div class="k">Saldo</div>
+                <div class="v" id="kSaldo">—</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Masuk</div>
+                <div class="v" id="kIn">—</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Keluar</div>
+                <div class="v" id="kOut">—</div>
+              </div>
+            </div>
           </div>
-          <div class="kpi">
-            <div class="k">Masuk</div>
-            <div class="v" id="kIn">—</div>
-          </div>
-          <div class="kpi">
-            <div class="k">Keluar</div>
-            <div class="v" id="kOut">—</div>
-          </div>
+
+          <div class="muted" style="margin-top:10px;" id="meta">—</div>
         </div>
 
-        <div class="card" style="margin-top:14px;">
-        <div class="row space">
+        <!-- Pocket Valas Card -->
+        <div class="card" style="margin-top:18px;">
+          <div class="row space">
             <div>
-            <div class="h2">Pocket Valas</div>
-            <div class="muted">Saldo valas hasil konversi dari IDR.</div>
+              <div class="h2">Pocket Valas</div>
+              <div class="muted">Saldo valas hasil konversi dari IDR.</div>
             </div>
             <span class="pill" id="pocketCount">—</span>
+          </div>
+
+          <div id="pocketCards" style="margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
         </div>
 
-        <div id="pocketCards" style="margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;"></div>
-        </div>
+        <!-- History Card -->
+        <div class="card" style="margin-top:18px;">
+          <div class="row space">
+            <div>
+              <div class="h2">History</div>
+              <div class="muted">You can sort it tho.</div>
+            </div>
+            <span class="pill" id="count">—</span>
+          </div>
 
-        <div class="muted" style="margin-top:10px;" id="meta">—</div>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
+                  <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
+                  <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
+                  <th class="sortable" data-sort="currency">Currency <span class="sortIcon" id="si_currency">↕</span></th>
+                  <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
+                  <th class="num">Saldo berjalan</th>
+                </tr>
+              </thead>
+              <tbody id="txBody">
+                <tr><td colspan="6">
+                  <div class="empty">
+                    <div class="emoji">⏳</div>
+                    <div class="big">Memuat data…</div>
+                    <div>Silakan tunggu sebentar.</div>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="h2">Filter</div>
-        <div class="muted">Biar gampang cari transaksi tertentu.</div>
+      <!-- Right Column: Filter Sidebar -->
+      <aside class="filter-sidebar">
+        <div class="card">
+          <div class="h2">Filter</div>
+          <div class="muted">Biar gampang cari transaksi tertentu.</div>
 
-        <div class="field">
-          <div class="label">Bulan</div>
-          <select id="filterMonth">
-            <option value="">Semua</option>
-          </select>
+          <div class="field">
+            <div class="label">Bulan</div>
+            <select id="filterMonth">
+              <option value="">Semua</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Tipe</div>
+            <select id="filterType">
+              <option value="">Semua</option>
+              <option value="in">Masuk</option>
+              <option value="out">Keluar</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Search note</div>
+            <input id="filterSearch" class="input" placeholder="mis: makan, buku…"/>
+          </div>
+
+          <div class="row gap2" style="margin-top:16px;">
+            <button class="btn ghost" id="btnReset">Reset</button>
+            <button class="btn primary" id="btnReload">Reload</button>
+          </div>
         </div>
-
-        <div class="field">
-          <div class="label">Tipe</div>
-          <select id="filterType">
-            <option value="">Semua</option>
-            <option value="in">Masuk</option>
-            <option value="out">Keluar</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <div class="label">Search note</div>
-          <input id="filterSearch" class="input" placeholder="mis: makan, buku…"/>
-        </div>
-
-        <div class="row" style="margin-top:12px;">
-          <button class="btn" id="btnReset">Reset</button>
-          <button class="btn" id="btnReload">Reload</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <div class="row space">
-        <div>
-          <div class="h2">History</div>
-          <div class="muted">You can sort it tho.</div>
-        </div>
-        <span class="pill" id="count">—</span>
-      </div>
-
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-        <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
-        <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
-        <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
-        <th class="sortable" data-sort="currency">Currency <span class="sortIcon" id="si_currency">↕</span></th>
-        <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
-        <th class="num">Saldo berjalan</th>
-        </tr>
-          </thead>
-          <tbody id="txBody">
-            <tr><td colspan="6">
-              <div class="empty">
-                <div class="emoji">⏳</div>
-                <div class="big">Memuat data…</div>
-                <div>Silakan tunggu sebentar.</div>
-              </div>
-            </td></tr>
-          </tbody>
-        </table>
-      </div>
+      </aside>
     </div>
   </div>
 
   <footer class="footer">
-  © 2025 <strong>BukanBodong</strong>. All rights reserved. Website ini dikelola pribadi oleh CEO. Tidak diawasi OJK.
-</footer>
+    © 2025 <strong>BukanBodong</strong>. All rights reserved. Website ini dikelola pribadi oleh CEO. Tidak diawasi OJK.
+  </footer>
 
   <script src="firebase-config.js"></script>
   <script type="module" src="user.js"></script>

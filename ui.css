@@ -179,7 +179,7 @@ hr{
   backdrop-filter: blur(16px);
   transition: all var(--transition-smooth);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .card::before{
@@ -410,11 +410,24 @@ hr{
 
 /* KPI Cards */
 .kpis{
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 14px;
   margin-top: 16px;
+  overflow-x: auto;
+  overflow-y: visible;  /* ← UBAH: dari hidden ke visible */
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 20px;  /* ← UBAH: dari 8px ke 20px */
+  padding-top: 4px;      /* ← TAMBAH: ruang atas */
+  padding-left: 2px;
+  padding-right: 2px;
+  background: transparent;
 }
+
+.kpis::-webkit-scrollbar { display: none; }
+
 @media (max-width: 680px){
   .kpis{ grid-template-columns: 1fr; }
 }
@@ -428,6 +441,10 @@ hr{
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
+  min-width: 280px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  z-index: 1;
 }
 
 .kpi::after{
@@ -444,9 +461,11 @@ hr{
 
 .kpi:hover{
   border-color: var(--line-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);  /* ← lebih soft */
+  z-index: 10;
 }
+
 .kpi:hover::after{ opacity: 1; }
 
 .kpi .k{ 
@@ -467,6 +486,8 @@ hr{
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Toast Notifications */
@@ -859,6 +880,77 @@ th.sortable:hover .sortIcon{ opacity: 1; }
   outline-offset: 2px;
 }
 
+/* Main Layout with Sidebar */
+.main-layout{
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  gap: 18px;
+  align-items: start;
+  margin-top: 0;
+}
+
+/* Main content column */
+.main-content{
+  min-width: 0; /* Prevent overflow */
+}
+
+/* Filter Sidebar - Sticky positioning */
+.filter-sidebar{
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+  min-width: 0;
+}
+
+/* Responsive: Stack layout on tablet and mobile */
+@media (max-width: 1200px){
+  .main-layout{
+    grid-template-columns: 1fr 320px;
+  }
+}
+
+@media (max-width: 980px){
+  .main-layout{
+    grid-template-columns: 1fr;
+  }
+
+  .filter-sidebar{
+    position: relative;
+    top: 0;
+    margin-top: 18px;
+  }
+}
+
+/* Ensure grid doesn't conflict with new layout */
+.main-layout .grid{
+  display: block;
+}
+
+/* Card spacing in main content */
+.main-content > .card + .card{
+  margin-top: 18px;
+}
+
+.main-content > .card:first-child{
+  margin-top: 0;
+}
+
+/* Filter sidebar card adjustments */
+.filter-sidebar .card{
+  margin: 0;
+}
+
+/* Adjust button spacing in filter */
+.filter-sidebar .row{
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.filter-sidebar .row .btn{
+  flex: 1;
+}
+
 /* Utility Classes */
 .text-center{ text-align: center; }
 .text-right{ text-align: right; }
@@ -867,3 +959,23 @@ th.sortable:hover .sortIcon{ opacity: 1; }
 .mb-0{ margin-bottom: 0; }
 .mt-1{ margin-top: 8px; }
 .mt-2{ margin-top: 16px; }
+
+.kpis-wrapper{
+  position: relative;
+  overflow: visible;
+  background: transparent;  /* ← TAMBAH */
+  margin: 0;
+  padding: 0;
+}
+
+.kpis-wrapper::after{
+  /* content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 8px;
+  width: 40px;
+  background: linear-gradient(to left, var(--bg), transparent);
+  pointer-events: none;
+  opacity: 0.6;
+  z-index: 0; */
+  display: none;
+}
