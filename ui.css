@@ -162,15 +162,25 @@ hr {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
 }
 
+/* --- GRID LAYOUT (Balance & Filter) --- */
 .grid {
   display: grid;
-  /* FIXED: Left flexible (1fr), Right adaptable but constrained (min 300px, max 350px) */
-  grid-template-columns: 1fr minmax(300px, 350px);
+  /* Kiri: Flexible, Kanan: Fixed width optimal untuk form (320px) */
+  grid-template-columns: 1fr 340px;
   gap: 24px;
-  align-items: start;
+  align-items: stretch; /* PENTING: Memaksa tinggi card kanan = kiri */
+  margin-top: 24px;
 }
-@media (max-width: 980px){
+/* Memastikan card di dalam grid mengisi tinggi penuh */
+.grid .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* Jika layar mengecil (Tablet/HP) */
+@media (max-width: 900px){
   .grid { grid-template-columns: 1fr; }
+  .grid .card { height: auto; }
 }
 
 /* --- Typography --- */
@@ -195,7 +205,7 @@ hr {
   font-size: 14px; 
 }
 
-/* --- Layout --- */
+/* --- Layout Utils --- */
 
 .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .row.space { justify-content: space-between; }
@@ -259,14 +269,17 @@ hr {
   flex-direction: column; 
   gap: 8px; 
   margin-top: 16px; 
-  width: 100%; /* Adapt to parent card width */
+  width: 100%; 
 }
+/* Push button to bottom in filter card */
+.field:last-child { margin-top: auto; padding-top: 16px; }
+
 .label { 
   color: var(--txt-sec); 
   font-size: 12px; 
   font-weight: 500; 
   margin-left: 2px;
-  white-space: nowrap; /* Prevent label from wrapping */
+  white-space: nowrap; 
 }
 
 .input, select {
@@ -288,33 +301,81 @@ hr {
   box-shadow: 0 0 0 2px rgba(108, 93, 211, 0.25);
 }
 
-/* --- KPIs --- */
+/* --- HORIZONTAL SCROLL KPIs --- */
 
 .kpis {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: nowrap; /* PENTING: Memaksa satu baris */
   gap: 16px;
   margin-top: 16px;
+  
+  /* Logika Scroll Horizontal */
+  overflow-x: auto;
+  overflow-y: hidden; /* Mencegah scroll vertikal */
+  scroll-snap-type: x mandatory; 
+  -webkit-overflow-scrolling: touch;
+  
+  /* Padding agar shadow/border tidak terpotong saat scroll */
+  padding: 4px 4px 16px 4px; 
+  
+  /* Sembunyikan Scrollbar agar bersih */
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
 }
-@media (max-width: 760px){
-  .kpis { grid-template-columns: 1fr; }
+.kpis::-webkit-scrollbar { 
+  display: none; 
 }
 
 .kpi {
   border: 1px solid var(--border);
   background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
   border-radius: var(--r-lg);
-  padding: 16px 20px;
+  padding: 20px 24px; /* Padding lebih lega */
+  position: relative;
+  
+  /* Layout Internal Kartu */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  
+  /* Ukuran Kartu */
+  flex: 0 0 auto; /* Jangan menyusut */
+  width: 280px;   /* Lebar tetap agar rapi */
+  min-height: 100px; /* Pastikan tinggi cukup */
+  scroll-snap-align: start;
+}
+
+/* Pastikan background membungkus konten */
+.kpi * {
+  z-index: 1;
   position: relative;
 }
-.kpi .k { color: var(--txt-sec); font-size: 13px; font-weight: 500; }
+
+/* Responsive: Sedikit lebih kecil di HP */
+@media (max-width: 600px){
+  .kpi { width: 85vw; } /* Gunakan Viewport Width agar pas di layar HP */
+}
+
+.kpi .k { 
+  color: var(--txt-sec); 
+  font-size: 13px; 
+  font-weight: 500;
+  margin-bottom: 8px; /* Jarak ke nilai */
+}
+
 .kpi .v {
-  margin-top: 8px;
   font-weight: 700;
-  font-size: clamp(24px, 3vw, 32px);
+  font-size: 28px;
   letter-spacing: -0.02em;
   color: #fff;
   text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  
+  /* Penanganan Teks Panjang */
+  white-space: nowrap;      /* Satu baris */
+  overflow: hidden;         /* Potong jika lewat */
+  text-overflow: ellipsis;  /* Tambahkan '...' */
+  width: 100%;              /* Pastikan mengikuti lebar parent */
+  display: block;           /* Pastikan block level agar width bekerja */
 }
 
 /* --- Table --- */
@@ -322,11 +383,11 @@ hr {
 .tableWrap {
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  overflow: hidden; /* Clean corners */
+  overflow: hidden; 
   overflow-x: auto;
   margin-top: 20px;
-  background: rgba(0,0,0,0.2); /* Darker base for better contrast */
-  padding-bottom: 4px; /* Ensure scrollbar doesn't hide content */
+  background: rgba(0,0,0,0.2); 
+  padding-bottom: 4px; 
 }
 table {
   width: 100%;
@@ -334,17 +395,17 @@ table {
   min-width: 860px;
 }
 th, td {
-  padding: 14px 20px; /* Tighter, more professional spacing */
+  padding: 14px 20px; 
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 th {
   position: sticky;
   top: 0;
-  background: rgba(10, 10, 16, 0.95); /* More opaque for readability */
+  background: rgba(10, 10, 16, 0.95); 
   backdrop-filter: blur(16px);
   color: var(--txt-sec);
-  font-size: 11px; /* Smaller, punchier caps */
+  font-size: 11px; 
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -356,10 +417,9 @@ td {
   font-size: 14px; 
   color: var(--txt); 
   font-variant-numeric: tabular-nums;
-  white-space: nowrap; /* CRITICAL FIX: Mencegah angka terpotong ke baris baru */
+  white-space: nowrap; 
 }
 
-/* Professional Data Rows */
 tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(255,255,255,0.04) !important; }
@@ -372,7 +432,7 @@ tr:hover td { background: rgba(255,255,255,0.04) !important; }
 .num { 
   text-align: right; 
   font-family: 'Inter', monospace; 
-  opacity: 1; /* Pastikan visibility penuh */
+  opacity: 1; 
 }
 .actions { display: flex; gap: 8px; justify-content: flex-end; }
 
@@ -385,7 +445,6 @@ tr:hover td { background: rgba(255,255,255,0.04) !important; }
   font-size: 14px;
   width: 100%;
 }
-/* Ensure centering specifically for table cells */
 td.empty, td.loading {
   text-align: center;
   display: table-cell;
@@ -488,17 +547,17 @@ td.empty, td.loading {
     display: flex; justify-content: space-between; align-items: center;
     gap: 16px; border-bottom: 1px solid var(--border);
     padding: 12px 16px;
-    white-space: normal; /* Allow text to wrap if needed on card view */
+    white-space: normal; 
   }
   td:last-child { border-bottom: none; }
   td::before {
     content: attr(data-label);
     color: var(--txt-sec); font-size: 12px; font-weight: 500;
-    flex-shrink: 0; /* Pastikan label tidak penyok */
+    flex-shrink: 0; 
     margin-right: 12px;
   }
   .actions { justify-content: flex-start; }
-  .num { text-align: right; word-break: break-all; } /* Force break if super long on mobile */
+  .num { text-align: right; word-break: break-all; } 
 }
 
 .footer {
