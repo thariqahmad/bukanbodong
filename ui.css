@@ -1,4 +1,4 @@
-/* ui.css - Enhanced Ultra-Premium Edition */
+/* ui.css - Enhanced Ultra-Premium Edition - ABSOLUTE FINAL */
 :root{
   /* Color Palette - Refined */
   --bg: #080d1f;
@@ -77,6 +77,14 @@ body{
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.18); background-clip: padding-box; }
+
+/* Hide scrollbar in table wrap */
+.tableWrap{
+  scrollbar-width: none;
+}
+.tableWrap::-webkit-scrollbar{
+  display: none;
+}
 
 a{ 
   color:inherit; 
@@ -306,37 +314,37 @@ hr{
 .btn.primary{
   background: linear-gradient(135deg, rgba(139,110,255,.9) 0%, rgba(139,110,255,.7) 100%);
   border-color: rgba(139,110,255,.3);
-  box-shadow: var(--glow-accent), var(--shadow-md);
+  box-shadow: var(--shadow-md);
   color: #fff;
   font-weight: 700;
 }
 .btn.primary:hover{
   background: linear-gradient(135deg, rgba(139,110,255,1) 0%, rgba(139,110,255,.85) 100%);
-  box-shadow: var(--glow-accent), var(--shadow-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn.good{
   background: linear-gradient(135deg, rgba(0,212,146,.88) 0%, rgba(0,212,146,.68) 100%);
   border-color: rgba(0,212,146,.28);
-  box-shadow: var(--glow-accent2), var(--shadow-md);
+  box-shadow: var(--shadow-md);
   color: #fff;
   font-weight: 700;
 }
 .btn.good:hover{
   background: linear-gradient(135deg, rgba(0,212,146,.96) 0%, rgba(0,212,146,.78) 100%);
-  box-shadow: var(--glow-accent2), var(--shadow-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn.bad{
   background: linear-gradient(135deg, rgba(255,92,138,.88) 0%, rgba(255,92,138,.68) 100%);
   border-color: rgba(255,92,138,.28);
-  box-shadow: var(--bad-glow), var(--shadow-md);
+  box-shadow: var(--shadow-md);
   color: #fff;
   font-weight: 700;
 }
 .btn.bad:hover{
   background: linear-gradient(135deg, rgba(255,92,138,.96) 0%, rgba(255,92,138,.78) 100%);
-  box-shadow: 0 0 28px var(--bad-glow), var(--shadow-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn.icon{
@@ -366,6 +374,72 @@ hr{
 .btn:disabled:hover{
   transform: none;
   box-shadow: none;
+}
+
+/* ======================================================
+   FIX MUTLAK (ABSOLUTE FIX) 
+   Masalah: Cahaya tombol bocor ke tabel sebelah.
+   Solusi: Paksa Container Card untuk memotong (clip) semua elemen anak.
+   ====================================================== */
+
+/* 1. TEMBOK BETON: Kunci kotak Filter agar tidak ada pixel yang bisa keluar */
+.filter-sidebar .card {
+    overflow: hidden !important; /* Ini kuncinya. Apapun yang melebar, POTONG. */
+    position: relative !important;
+    z-index: 1 !important;
+    transform: translateZ(0); /* Hack browser biar ga rendering aneh-aneh */
+}
+
+/* 2. MATIKAN TOTAL EFEK RIPPLE (Lingkaran Cahaya) */
+/* Kita gunakan selector yang LEBIH SPESIFIK (.filter-sidebar .card .btn) */
+.filter-sidebar .card .btn::before,
+.filter-sidebar .card .btn:hover::before,
+.filter-sidebar .card .btn:focus::before,
+.filter-sidebar .card .btn:active::before {
+    display: none !important;
+    content: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    animation: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* 3. MATIKAN SHADOW & TRANSFORM PADA TOMBOLNYA SENDIRI */
+.filter-sidebar .card .btn,
+.filter-sidebar .card .btn:hover,
+.filter-sidebar .card .btn:active {
+    box-shadow: none !important;
+    transform: none !important;
+    top: 0 !important; /* Mencegah tombol loncat */
+}
+
+.filter-sidebar .btn.primary{
+  background: linear-gradient(135deg, rgba(139,110,255,.9) 0%, rgba(139,110,255,.7) 100%);
+  border-color: rgba(139,110,255,.3);
+  box-shadow: none;
+  color: #fff;
+  font-weight: 700;
+}
+
+.filter-sidebar .btn.primary:hover{
+  background: linear-gradient(135deg, rgba(139,110,255,.95) 0%, rgba(139,110,255,.75) 100%);
+  box-shadow: none;
+  transform: none;
+}
+
+.filter-sidebar .btn.ghost{
+  background: transparent;
+  border-color: rgba(255,255,255,.12);
+  box-shadow: none;
+}
+
+.filter-sidebar .btn.ghost:hover{
+  background: var(--panel);
+  border-color: var(--line-hover);
+  box-shadow: none;
+  transform: none;
 }
 
 /* Form Elements */
@@ -408,22 +482,24 @@ hr{
   box-shadow: 0 0 0 4px rgba(139,110,255,.14), var(--shadow-sm);
 }
 
-/* KPI Cards */
+/* KPI Cards - Horizontal Scroll */
 .kpis{
   display: flex;
   gap: 14px;
   margin-top: 16px;
   overflow-x: auto;
-  overflow-y: visible;  /* ← UBAH: dari hidden ke visible */
+  overflow-y: visible;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-bottom: 20px;  /* ← UBAH: dari 8px ke 20px */
-  padding-top: 4px;      /* ← TAMBAH: ruang atas */
+  padding-bottom: 20px;
+  padding-top: 4px;
   padding-left: 2px;
   padding-right: 2px;
   background: transparent;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .kpis::-webkit-scrollbar { display: none; }
@@ -447,6 +523,28 @@ hr{
   z-index: 1;
 }
 
+/* Tablet and smaller - adjust card width */
+@media (max-width: 980px){
+  .kpi{
+    min-width: 260px;
+  }
+}
+
+/* Mobile - cards take more screen space */
+@media (max-width: 680px){
+  .kpi{
+    min-width: calc(85vw - 32px);
+    max-width: 340px;
+  }
+}
+
+/* Very small mobile */
+@media (max-width: 480px){
+  .kpi{
+    min-width: calc(90vw - 32px);
+  }
+}
+
 .kpi::after{
   content: '';
   position: absolute;
@@ -457,12 +555,14 @@ hr{
   background: radial-gradient(circle, rgba(139,110,255,.1), transparent 70%);
   opacity: 0;
   transition: opacity var(--transition-smooth);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .kpi:hover{
   border-color: var(--line-hover);
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,.25);  /* ← lebih soft */
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);
   z-index: 10;
 }
 
@@ -474,12 +574,13 @@ hr{
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  white-space: nowrap;
 }
 
 .kpi .v{
   margin-top: 10px;
   font-weight: 800;
-  font-size: clamp(26px, 3.5vw, 38px);
+  font-size: clamp(24px, 5vw, 36px);
   letter-spacing: -0.8px;
   line-height: 1.1;
   background: linear-gradient(135deg, var(--txt) 0%, rgba(245,247,255,.85) 100%);
@@ -488,6 +589,18 @@ hr{
   background-clip: text;
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+.kpis-wrapper{
+  position: relative;
+  overflow: visible;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+.kpis-wrapper::after{
+  display: none;
 }
 
 /* Toast Notifications */
@@ -868,22 +981,10 @@ th.sortable:hover .sortIcon{ opacity: 1; }
   letter-spacing: -0.1px;
 }
 
-/* Selection */
-::selection{
-  background: rgba(139,110,255,.3);
-  color: var(--txt);
-}
-
-/* Focus Visible */
-:focus-visible{
-  outline: 2px solid rgba(139,110,255,.5);
-  outline-offset: 2px;
-}
-
 /* Main Layout with Sidebar */
 .main-layout{
   display: grid;
-  grid-template-columns: 1fr 310px;
+  grid-template-columns: 1fr 360px;
   gap: 18px;
   align-items: start;
   margin-top: 0;
@@ -891,7 +992,7 @@ th.sortable:hover .sortIcon{ opacity: 1; }
 
 /* Main content column */
 .main-content{
-  min-width: 0; /* Prevent overflow */
+  min-width: 0;
 }
 
 /* Filter Sidebar - Sticky positioning */
@@ -935,9 +1036,37 @@ th.sortable:hover .sortIcon{ opacity: 1; }
   margin-top: 0;
 }
 
-/* Filter sidebar card adjustments */
+/* ═══════════════════════════════════════════════════════
+   ABSOLUTE FINAL FIX: Overflow hidden on filter card
+   ═══════════════════════════════════════════════════ */
+
+/* Filter sidebar card - FORCE overflow hidden */
 .filter-sidebar .card{
   margin: 0;
+  overflow: hidden !important;
+}
+
+/* Completely disable all pseudo elements */
+.filter-sidebar .card::before{
+  display: none !important;
+  content: none !important;
+}
+
+.filter-sidebar .card::after{
+  display: none !important;
+  content: none !important;
+}
+
+/* Disable hover effects */
+.filter-sidebar .card:hover{
+  transform: none !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.filter-sidebar .card:hover::before,
+.filter-sidebar .card:hover::after{
+  opacity: 0 !important;
+  display: none !important;
 }
 
 /* Adjust button spacing in filter */
@@ -951,6 +1080,56 @@ th.sortable:hover .sortIcon{ opacity: 1; }
   flex: 1;
 }
 
+/* FIX: Pocket Valas Button Click Issue */
+#pocketCards{
+  position: relative;
+  z-index: 1;
+}
+
+#pocketCards .kpi{
+  position: relative;
+  z-index: 1;
+}
+
+#pocketCards .kpi .btn,
+#pocketCards .btn{
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+#pocketCards .kpi:hover{
+  transform: translateY(-2px);
+  z-index: 20;
+}
+
+.pocket-card{
+  position: relative;
+  z-index: 1;
+}
+
+.pocket-card .btn{
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.card > div{
+  position: relative;
+}
+
+/* Selection */
+::selection{
+  background: rgba(139,110,255,.3);
+  color: var(--txt);
+}
+
+/* Focus Visible */
+:focus-visible{
+  outline: 2px solid rgba(139,110,255,.5);
+  outline-offset: 2px;
+}
+
 /* Utility Classes */
 .text-center{ text-align: center; }
 .text-right{ text-align: right; }
@@ -959,23 +1138,3 @@ th.sortable:hover .sortIcon{ opacity: 1; }
 .mb-0{ margin-bottom: 0; }
 .mt-1{ margin-top: 8px; }
 .mt-2{ margin-top: 16px; }
-
-.kpis-wrapper{
-  position: relative;
-  overflow: visible;
-  background: transparent;  /* ← TAMBAH */
-  margin: 0;
-  padding: 0;
-}
-
-.kpis-wrapper::after{
-  /* content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 8px;
-  width: 40px;
-  background: linear-gradient(to left, var(--bg), transparent);
-  pointer-events: none;
-  opacity: 0.6;
-  z-index: 0; */
-  display: none;
-}

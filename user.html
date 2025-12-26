@@ -13,7 +13,7 @@
       <div class="brand">
         <div class="dot"></div>
         <div>
-          <div class="title">My Investment</div>
+          <div class="title">BukanBodong.</div>
           <div class="sub" id="who">—</div>
         </div>
       </div>
@@ -37,15 +37,15 @@
           <div class="kpis-wrapper">
             <div class="kpis" style="margin-top:12px;">
               <div class="kpi">
-                <div class="k">Saldo</div>
+                <div class="k">Balance</div>
                 <div class="v" id="kSaldo">—</div>
               </div>
               <div class="kpi">
-                <div class="k">Masuk</div>
+                <div class="k">Income</div>
                 <div class="v" id="kIn">—</div>
               </div>
               <div class="kpi">
-                <div class="k">Keluar</div>
+                <div class="k">Expense</div>
                 <div class="v" id="kOut">—</div>
               </div>
             </div>
@@ -58,8 +58,8 @@
         <div class="card" style="margin-top:18px;">
           <div class="row space">
             <div>
-              <div class="h2">Pocket Valas</div>
-              <div class="muted">Saldo valas hasil konversi dari IDR.</div>
+              <div class="h2">Forex Pocket</div>
+              <div class="muted">Forex balance after IDR conversion.</div>
             </div>
             <span class="pill" id="pocketCount">—</span>
           </div>
@@ -81,20 +81,20 @@
             <table>
               <thead>
                 <tr>
-                  <th class="sortable" data-sort="date">Tanggal <span class="sortIcon" id="si_date">↕</span></th>
-                  <th class="sortable" data-sort="note">Catatan <span class="sortIcon" id="si_note">↕</span></th>
-                  <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
+                  <th class="sortable" data-sort="date">Date <span class="sortIcon" id="si_date">↕</span></th>
+                  <th class="sortable" data-sort="note">Note <span class="sortIcon" id="si_note">↕</span></th>
+                  <th class="sortable num" data-sort="amount">Amount <span class="sortIcon" id="si_amount">↕</span></th>
                   <th class="sortable" data-sort="currency">Currency <span class="sortIcon" id="si_currency">↕</span></th>
-                  <th class="sortable" data-sort="type">Tipe <span class="sortIcon" id="si_type">↕</span></th>
-                  <th class="num">Saldo berjalan</th>
+                  <th class="sortable" data-sort="type">Type <span class="sortIcon" id="si_type">↕</span></th>
+                  <th class="num">Running Balance</th>
                 </tr>
               </thead>
               <tbody id="txBody">
                 <tr><td colspan="6">
                   <div class="empty">
-                    <div class="emoji">⏳</div>
-                    <div class="big">Memuat data…</div>
-                    <div>Silakan tunggu sebentar.</div>
+                    <!-- <div class="emoji">⏳</div> -->
+                    <div class="big">Loading data…</div>
+                    <div>Please wait a moment.</div>
                   </div>
                 </td></tr>
               </tbody>
@@ -107,21 +107,21 @@
       <aside class="filter-sidebar">
         <div class="card">
           <div class="h2">Filter</div>
-          <div class="muted">Biar gampang cari transaksi tertentu.</div>
+          <div class="muted">Filter transactions.</div>
 
           <div class="field">
-            <div class="label">Bulan</div>
+            <div class="label">Month</div>
             <select id="filterMonth">
-              <option value="">Semua</option>
+              <option value="">All</option>
             </select>
           </div>
 
           <div class="field">
-            <div class="label">Tipe</div>
+            <div class="label">Type</div>
             <select id="filterType">
-              <option value="">Semua</option>
-              <option value="in">Masuk</option>
-              <option value="out">Keluar</option>
+              <option value="">All</option>
+              <option value="in">Income</option>
+              <option value="out">Expense</option>
             </select>
           </div>
 
@@ -131,8 +131,8 @@
           </div>
 
           <div class="row gap2" style="margin-top:16px;">
-            <button class="btn ghost" id="btnReset">Reset</button>
-            <button class="btn primary" id="btnReload">Reload</button>
+            <button class="btn primary" id="btnReset">Reset</button>
+            <!-- <button class="btn ghost" id="btnReload">Reload</button> -->
           </div>
         </div>
       </aside>
