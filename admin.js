@@ -330,6 +330,17 @@ function renderPockets(){
   setPocketSelectOptions(fxSellPocket, "—");
 }
 
+function tsToMs(ts){
+  if (!ts) return 0;
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts.seconds === "number"){
+    const ms = ts.seconds * 1000;
+    const ns = typeof ts.nanoseconds === "number" ? ts.nanoseconds : 0;
+    return ms + Math.floor(ns / 1e6);
+  }
+  return 0;
+}
+
 /** ---------- Build Combined Timeline ---------- */
 function normalizeEvents(){
   const events = [];
@@ -344,7 +355,8 @@ function normalizeEvents(){
       currency: "IDR",
       note: t.note || "",
       isDeleted: Boolean(t.isDeleted),
-      createdAt: t.createdAt || null
+      createdAt: t.createdAt || null,
+      createdAtMs: tsToMs(t.createdAt)
     });
   }
 
@@ -373,7 +385,8 @@ function normalizeEvents(){
       isDeleted: Boolean(t.isDeleted),
       pocketId: t.pocketId,
       rawType: t.type,
-      createdAt: t.createdAt || null
+      createdAt: t.createdAt || null,
+      createdAtMs: tsToMs(t.createdAt)
     });
   }
 
@@ -429,7 +442,20 @@ function applyFilters(){
   if (type) arr = arr.filter(t => t.type === type);
   if (q) arr = arr.filter(t => String(t.note||"").toLowerCase().includes(q));
 
+  if (sortField === "date"){
+  arr.sort((a,b) => {
+    const A = Number(a.createdAtMs || 0);
+    const B = Number(b.createdAtMs || 0);
+    if (A !== B) return A - B; // asc
+    const d = String(a.date || "").localeCompare(String(b.date || ""));
+    if (d !== 0) return d;
+    return String(a.id || "").localeCompare(String(b.id || ""));
+  });
+  if (sortDir === "desc") arr.reverse(); // terbaru duluan
+} else {
   arr = sortByField(arr, sortField, sortDir);
+}
+
   viewEvents = arr;
 
   // KPI IDR always from IDR tx

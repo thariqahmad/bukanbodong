@@ -89,6 +89,17 @@ function renderPocketCards(){
   if (pocketCount) pocketCount.textContent = `${pockets.length} pocket`;
 }
 
+function tsToMs(ts){
+  if (!ts) return 0;
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts.seconds === "number"){
+    const ms = ts.seconds * 1000;
+    const ns = typeof ts.nanoseconds === "number" ? ts.nanoseconds : 0;
+    return ms + Math.floor(ns / 1e6);
+  }
+  return 0;
+}
+
 function normalizeEvents(){
   const events = [];
 
@@ -102,16 +113,26 @@ function normalizeEvents(){
       currency: "IDR",
       note: t.note || "",
       isDeleted: Boolean(t.isDeleted),
-      createdAt: t.createdAt || null
+      createdAt: t.createdAt || null,
+      createdAtMs: tsToMs(t.createdAt)
     });
   }
 
   for (const t of rawPocketTx){
     const cur = String(t.currency || "").toUpperCase();
-    const normalizedType = (t.type === "fx_buy") ? "in" : t.type;
-    const noteExtra = (t.type === "fx_buy")
-      ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
-      : "";
+
+    const normalizedType =
+      (t.type === "fx_buy") ? "in" :
+      (t.type === "fx_sell") ? "out" :
+      t.type;
+
+    const noteExtra =
+      (t.type === "fx_buy")
+        ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        : (t.type === "fx_sell")
+        ? ` (Dikonversi menjadi ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        : "";
+
     events.push({
       source: "POCKET",
       id: t.id,
@@ -121,7 +142,9 @@ function normalizeEvents(){
       currency: cur,
       note: (t.note || "") + noteExtra,
       isDeleted: Boolean(t.isDeleted),
-      rawType: t.type
+      rawType: t.type,
+      createdAt: t.createdAt || null,
+      createdAtMs: tsToMs(t.createdAt)
     });
   }
 
@@ -137,8 +160,23 @@ function rebuildMonthOptionsFromEvents(){
 }
 
 function computeRunningMaps(){
-  // IDR running
-  const idrAsc = rawIdrTx.filter(t => !t.isDeleted).slice().sort((a,b)=> String(a.date||"").localeCompare(String(b.date||"")));
+  // IDR running: urut berdasarkan date, lalu createdAt, lalu id (stabil)
+  const idrAsc = rawIdrTx
+    .filter(t => !t.isDeleted)
+    .slice()
+    .sort((a,b) => {
+      const da = String(a.date || "");
+      const db = String(b.date || "");
+      const cmpD = da.localeCompare(db);
+      if (cmpD !== 0) return cmpD;
+
+      const ca = tsToMs(a.createdAt);
+      const cb = tsToMs(b.createdAt);
+      if (ca !== cb) return ca - cb;
+
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
+
   let runIdr = 0;
   const runMapIdr = new Map();
   for (const t of idrAsc){
@@ -146,20 +184,64 @@ function computeRunningMaps(){
     runMapIdr.set(t.id, runIdr);
   }
 
-  // Pocket running per currency
+  // Pocket running per currency: urut berdasarkan date, lalu createdAt, lalu id (stabil)
   const runMapPocket = new Map();
   const perCur = new Map();
-  const pocketAsc = rawPocketTx.filter(t => !t.isDeleted).slice().sort((a,b)=> String(a.date||"").localeCompare(String(b.date||"")));
+
+  const pocketAsc = rawPocketTx
+    .filter(t => !t.isDeleted)
+    .slice()
+    .sort((a,b) => {
+      const da = String(a.date || "");
+      const db = String(b.date || "");
+      const cmpD = da.localeCompare(db);
+      if (cmpD !== 0) return cmpD;
+
+      const ca = tsToMs(a.createdAt);
+      const cb = tsToMs(b.createdAt);
+      if (ca !== cb) return ca - cb;
+
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
+
   for (const t of pocketAsc){
     const cur = String(t.currency || "").toUpperCase();
     const running = perCur.get(cur) || 0;
-    const eff = (t.type === "out") ? -Number(t.amount||0) : Number(t.amount||0);
+
+    const eff =
+      (t.type === "fx_buy") ? Number(t.amount || 0) :
+      (t.type === "fx_sell") ? -Number(t.amount || 0) :
+      (t.type === "out") ? -Number(t.amount || 0) :
+      Number(t.amount || 0);
+
     const next = running + eff;
     perCur.set(cur, next);
     runMapPocket.set(`${cur}:${t.id}`, next);
   }
 
   return { runMapIdr, runMapPocket };
+}
+
+function sortEvents(view){
+  if (sortField === "date"){
+    // Sorting "Tanggal" = berdasarkan createdAt (waktu pembuatan), bukan string date
+    view.sort((a,b) => {
+      const A = Number(a.createdAtMs || 0);
+      const B = Number(b.createdAtMs || 0);
+      if (A !== B) return A - B;
+
+      // fallback: date lalu id untuk stabilitas
+      const d = String(a.date || "").localeCompare(String(b.date || ""));
+      if (d !== 0) return d;
+
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
+
+    if (sortDir === "desc") view.reverse();
+    return view;
+  }
+
+  return sortByField(view, sortField, sortDir);
 }
 
 function applyFilters(){
@@ -176,7 +258,7 @@ function applyFilters(){
   if (type) view = view.filter(t => t.type === type);
   if (q) view = view.filter(t => String(t.note||"").toLowerCase().includes(q));
 
-  view = sortByField(view, sortField, sortDir);
+  view = sortEvents(view);
   viewEvents = view;
 
   // KPI hanya untuk IDR (saldo utama)
@@ -237,11 +319,13 @@ document.querySelectorAll("th.sortable").forEach(th => {
   th.addEventListener("click", () => {
     const f = th.dataset.sort;
     if (!f) return;
+
     if (sortField === f) sortDir = (sortDir === "asc") ? "desc" : "asc";
     else {
       sortField = f;
       sortDir = (f === "date") ? "desc" : "asc";
     }
+
     setSortIcon(sortField);
     applyFilters();
   });
@@ -336,6 +420,7 @@ onAuthStateChanged(auth, async (user) => {
         idrAmount: Number(x.idrAmount || 0),
         rate: Number(x.rate || 0),
         note: x.note || "",
+        createdAt: x.createdAt || null,
         isDeleted: Boolean(x.isDeleted)
       };
     });
