@@ -23,7 +23,7 @@ const filterMonth = document.getElementById("filterMonth");
 const filterType = document.getElementById("filterType");
 const filterSearch = document.getElementById("filterSearch");
 const btnReset = document.getElementById("btnReset");
-const btnReload = document.getElementById("btnReload");
+const btnReload = document.getElementById("btnReload"); // NOTE: di user.html tombol ini memang dikomentari
 
 const txBody = document.getElementById("txBody");
 const count = document.getElementById("count");
@@ -44,6 +44,11 @@ let unsubP = null;
 
 let sortField = "date";
 let sortDir = "desc";
+
+// helper: aman kalau elemennya null
+function on(el, evt, fn){
+  if (el) el.addEventListener(evt, fn);
+}
 
 function setSortIcon(field){
   const map = ["date","note","amount","currency","type"];
@@ -160,7 +165,6 @@ function rebuildMonthOptionsFromEvents(){
 }
 
 function computeRunningMaps(){
-  // IDR running: urut berdasarkan date, lalu createdAt, lalu id (stabil)
   const idrAsc = rawIdrTx
     .filter(t => !t.isDeleted)
     .slice()
@@ -184,7 +188,6 @@ function computeRunningMaps(){
     runMapIdr.set(t.id, runIdr);
   }
 
-  // Pocket running per currency: urut berdasarkan date, lalu createdAt, lalu id (stabil)
   const runMapPocket = new Map();
   const perCur = new Map();
 
@@ -224,13 +227,11 @@ function computeRunningMaps(){
 
 function sortEvents(view){
   if (sortField === "date"){
-    // Sorting "Tanggal" = berdasarkan createdAt (waktu pembuatan), bukan string date
     view.sort((a,b) => {
       const A = Number(a.createdAtMs || 0);
       const B = Number(b.createdAtMs || 0);
       if (A !== B) return A - B;
 
-      // fallback: date lalu id untuk stabilitas
       const d = String(a.date || "").localeCompare(String(b.date || ""));
       if (d !== 0) return d;
 
@@ -261,7 +262,6 @@ function applyFilters(){
   view = sortEvents(view);
   viewEvents = view;
 
-  // KPI hanya untuk IDR (saldo utama)
   const { bal, tin, tout } = computeIdrKpis(rawIdrTx);
   kSaldo.textContent = fmtIDR(bal);
   kIn.textContent = fmtIDR(tin);
@@ -331,11 +331,11 @@ document.querySelectorAll("th.sortable").forEach(th => {
   });
 });
 
-filterMonth.addEventListener("change", applyFilters);
-filterType.addEventListener("change", applyFilters);
-filterSearch.addEventListener("input", debounce(applyFilters, 220));
+on(filterMonth, "change", applyFilters);
+on(filterType, "change", applyFilters);
+on(filterSearch, "input", debounce(applyFilters, 220));
 
-btnReset.addEventListener("click", () => {
+on(btnReset, "click", () => {
   filterMonth.value = "";
   filterType.value = "";
   filterSearch.value = "";
@@ -343,12 +343,13 @@ btnReset.addEventListener("click", () => {
   toast({ title:"Reset", message:"Filter direset." });
 });
 
-btnReload.addEventListener("click", () => {
+// FIX UTAMA: btnReload optional (di user.html memang dikomentari)
+on(btnReload, "click", () => {
   applyFilters();
   toast({ title:"Info", message:"Re-render selesai." });
 });
 
-btnLogout.addEventListener("click", async () => {
+on(btnLogout, "click", async () => {
   await signOut(auth);
   location.href = "login.html";
 });
@@ -371,7 +372,6 @@ onAuthStateChanged(auth, async (user) => {
   if (unsubPT) unsubPT();
   if (unsubP) unsubP();
 
-  // pockets
   const qP = query(collection(db, "pockets"), where("ownerUid", "==", user.uid));
   unsubP = onSnapshot(qP, (snap) => {
     pockets = snap.docs.map(d => {
@@ -388,7 +388,6 @@ onAuthStateChanged(auth, async (user) => {
     renderPocketCards();
   });
 
-  // IDR transactions
   const qTx = query(collection(db, "transactions"), where("ownerUid", "==", user.uid));
   unsubIdr = onSnapshot(qTx, (snap) => {
     rawIdrTx = snap.docs.map(d => {
@@ -406,7 +405,6 @@ onAuthStateChanged(auth, async (user) => {
     applyFilters();
   }, (err) => toast({ title:"Gagal load IDR tx", message: err.message || "Cek rules.", type:"err" }));
 
-  // pocket_transactions (ownerUid only; no composite index)
   const qPT = query(collection(db, "pocket_transactions"), where("ownerUid", "==", user.uid));
   unsubPT = onSnapshot(qPT, (snap) => {
     rawPocketTx = snap.docs.map(d => {
