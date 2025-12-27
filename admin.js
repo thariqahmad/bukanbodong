@@ -33,7 +33,7 @@ const filterSearch = document.getElementById("filterSearch");
 const txBody = document.getElementById("txBody");
 const meta = document.getElementById("meta");
 
-/* Modal transaksi */
+/* Modal Transaction */
 const txModal = document.getElementById("txModal");
 const modalTitle = document.getElementById("modalTitle");
 const modalSub = document.getElementById("modalSub");
@@ -55,7 +55,7 @@ const mAmount = document.getElementById("mAmount");
 const mAmountFX = document.getElementById("mAmountFX");
 const mFxHint = document.getElementById("mFxHint");
 
-/* Confirm delete */
+/* Confirm Delete */
 const confirmModal = document.getElementById("confirmModal");
 const btnCloseConfirm = document.getElementById("btnCloseConfirm");
 const btnCancelConfirm = document.getElementById("btnCancelConfirm");
@@ -69,7 +69,7 @@ const pocketMeta = document.getElementById("pocketMeta");
 const btnNewPocket = document.getElementById("btnNewPocket");
 const btnFxConvert = document.getElementById("btnFxConvert");
 
-/* Pocket modal */
+/* Pocket Modal */
 const pocketModal = document.getElementById("pocketModal");
 const pocketModalSub = document.getElementById("pocketModalSub");
 const btnClosePocketModal = document.getElementById("btnClosePocketModal");
@@ -78,7 +78,7 @@ const btnSavePocket = document.getElementById("btnSavePocket");
 const pCurrency = document.getElementById("pCurrency");
 const pRate = document.getElementById("pRate");
 
-/* FX modal */
+/* FX Modal */
 const fxModal = document.getElementById("fxModal");
 const fxModalSub = document.getElementById("fxModalSub");
 const btnCloseFxModal = document.getElementById("btnCloseFxModal");
@@ -92,7 +92,7 @@ const fxResult = document.getElementById("fxResult");
 const fxRateHint = document.getElementById("fxRateHint");
 const fxNote = document.getElementById("fxNote");
 
-/* FX Sell modal */
+/* FX Sell Modal */
 const btnFxSell = document.getElementById("btnFxSell");
 
 const fxSellModal = document.getElementById("fxSellModal");
@@ -143,7 +143,7 @@ function round2(n){
   return Math.round(x * 100) / 100;
 }
 
-// untuk nominal VALAS: selalu dibulatkan 2 desimal
+// For FX amounts: always rounded to 2 decimals
 function parseFx2(input){
   const s = String(input ?? "").trim().replace(",", ".");
   const v = Number(s);
@@ -151,7 +151,7 @@ function parseFx2(input){
   return round2(v);
 }
 
-// untuk KURS IDR per 1 unit: boleh desimal (contoh 4150.69)
+// For IDR Rate per 1 unit: allow decimals (e.g. 4150.69)
 function parseRateIDR(input){
   let s = String(input ?? "").trim();
   if (!s) return 0;
@@ -221,10 +221,12 @@ function setSortIcon(field){
   const map = ["date","note","amount","currency","type"];
   for (const f of map){
     const el = document.getElementById(`si_${f}`);
-    if (el) el.textContent = "↕";
+    if (el) el.innerHTML = '<i class="fa-solid fa-sort" style="opacity:0.3"></i>';
   }
   const el = document.getElementById(`si_${field}`);
-  if (el) el.textContent = sortDir === "asc" ? "↑" : "↓";
+  if (el) el.innerHTML = sortDir === "asc" 
+    ? '<i class="fa-solid fa-sort-up"></i>' 
+    : '<i class="fa-solid fa-sort-down"></i>';
 }
 
 function computeIdrKpis(txs){
@@ -251,21 +253,19 @@ function onCurrencyChange(){
   if (cur === "IDR"){
     amtIDRField.style.display = "";
     amtFXField.style.display = "none";
-    mCurrencyHint.textContent = "Transaksi IDR (utama).";
+    mCurrencyHint.textContent = "IDR Transactions.";
   } else {
     amtIDRField.style.display = "none";
     amtFXField.style.display = "";
     const p = pockets.find(x => x.currency === cur);
     const bal = p ? fmtCurrency(cur, p.balance) : "—";
     const rate = p ? fmtIDR(p.rate) : "—";
-    mCurrencyHint.textContent = `Pocket ${cur} • Rate ${rate} / 1 • Saldo pocket: ${bal}`;
-    mFxHint.textContent = `Masukkan nominal dalam ${cur}.`;
+    mCurrencyHint.textContent = `Pocket ${cur} • Rate ${rate} / 1 • Balance: ${bal}`;
+    mFxHint.textContent = `Enter amount in ${cur}.`;
   }
 }
 
 mCurrency?.addEventListener("change", onCurrencyChange);
-
-/** SAFE GUARDS */
 
 /** ---------- Pocket Cards ---------- */
 function setHTML(el, html){
@@ -276,10 +276,10 @@ function setText(el, text){
 }
 
 function renderPockets(){
-  // Guard: kalau DOM pocket section belum ada, jangan bikin crash
+  // Guard: if DOM pocket section is missing
   if (!pocketWrap || !pocketMeta) return;
 
-  // helper untuk dropdown (kalau elemennya ada)
+  // helper for dropdowns
   function setPocketSelectOptions(selectEl, emptyLabel){
     if (!selectEl) return;
     if (!pockets.length){
@@ -287,13 +287,13 @@ function renderPockets(){
       return;
     }
     selectEl.innerHTML =
-      `<option value="">— Pilih pocket —</option>` +
+      `<option value="">— Choose Pocket —</option>` +
       pockets.map(p => `<option value="${p.id}">${escapeHtml(p.currency)} (rate ${p.rate})</option>`).join("");
   }
 
   if (!selectedOwnerUid){
     setHTML(pocketWrap, "");
-    setText(pocketMeta, "Pilih target untuk melihat pocket.");
+    setText(pocketMeta, "Choose target to view pocket.");
     setPocketSelectOptions(fxPocket, "—");
     setPocketSelectOptions(fxSellPocket, "—");
     return;
@@ -301,13 +301,13 @@ function renderPockets(){
 
   if (!pockets.length){
     setHTML(pocketWrap, `<div class="empty" style="grid-column:1/-1;">
-      <div class="emoji">💱</div>
-      <div class="big">Belum ada pocket</div>
-      <div>Tambah pocket dulu (USD/JPY/EUR, dll).</div>
+      <div class="emoji"><i class="fa-solid fa-wallet" style="font-size:2rem; color:#ccc;"></i></div>
+      <div class="big">No pocket yet</div>
+      <div>Add a pocket now</div>
     </div>`);
     setText(pocketMeta, "—");
-    setPocketSelectOptions(fxPocket, "— tidak ada pocket —");
-    setPocketSelectOptions(fxSellPocket, "— tidak ada pocket —");
+    setPocketSelectOptions(fxPocket, "— No pocket found —");
+    setPocketSelectOptions(fxSellPocket, "— No pocket found —");
     return;
   }
 
@@ -318,13 +318,15 @@ function renderPockets(){
           <div class="k">${escapeHtml(p.currency)} • Rate ${fmtIDR(p.rate)} / 1</div>
           <div class="v">${fmtCurrency(p.currency, p.balance)}</div>
         </div>
-        <button class="btn icon bad" title="Hapus pocket" data-action="deletePocket" data-id="${p.id}">🗑️</button>
+        <button class="btn icon bad" title="Remove Pocket" data-action="deletePocket" data-id="${p.id}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
       </div>
-      <div class="muted" style="margin-top:6px;">Pocket aktif</div>
+      <div class="muted" style="margin-top:6px;">Active pocket</div>
     </div>
   `).join(""));
 
-  setText(pocketMeta, `Total pocket: ${pockets.length}`);
+  setText(pocketMeta, `Pockets total: ${pockets.length}`);
 
   setPocketSelectOptions(fxPocket, "—");
   setPocketSelectOptions(fxSellPocket, "—");
@@ -369,9 +371,9 @@ function normalizeEvents(){
 
     const noteExtra =
     (t.type === "fx_buy")
-        ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        ? ` (Convert from ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
         : (t.type === "fx_sell")
-        ? ` (Dikonversi menjadi ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        ? ` (Converted to ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
         : "";
 
     events.push({
@@ -397,7 +399,7 @@ function rebuildMonthFilterOptions(list){
   const base = list.filter(x => !x.isDeleted);
   const months = buildMonthOptions(base);
   const prev = filterMonth.value;
-  filterMonth.innerHTML = `<option value="">Semua</option>` + months.map(m => `<option value="${m}">${m}</option>`).join("");
+  filterMonth.innerHTML = `<option value="">All</option>` + months.map(m => `<option value="${m}">${m}</option>`).join("");
   if (months.includes(prev)) filterMonth.value = prev;
 }
 
@@ -451,7 +453,7 @@ function applyFilters(){
     if (d !== 0) return d;
     return String(a.id || "").localeCompare(String(b.id || ""));
   });
-  if (sortDir === "desc") arr.reverse(); // terbaru duluan
+  if (sortDir === "desc") arr.reverse(); // newest first
 } else {
   arr = sortByField(arr, sortField, sortDir);
 }
@@ -467,13 +469,13 @@ function applyFilters(){
   rebuildMonthFilterOptions(allEvents);
 
   renderTable();
-  meta.textContent = `Target: ${selectedOwnerLabel || "-"} • Terlihat: ${viewEvents.length}`;
+  meta.textContent = `Target: ${selectedOwnerLabel || "-"} • Total: ${viewEvents.length}`;
 }
 
 function renderTable(){
   if (!selectedOwnerUid){
     txBody.innerHTML = `<tr><td colspan="7">
-      <div class="empty"><div class="emoji">👆</div><div class="big">Pilih target dulu</div><div>Pilih target dari dropdown.</div></div>
+      <div class="empty"><div class="big">Select a target</div><div>Please choose a target from the dropdown.</div></div>
     </td></tr>`;
     return;
   }
@@ -481,9 +483,8 @@ function renderTable(){
   if (!viewEvents.length){
     txBody.innerHTML = `<tr><td colspan="7">
       <div class="empty">
-        <div class="emoji">🗂️</div>
-        <div class="big">Belum ada histori</div>
-        <div>Tambah transaksi IDR, buat pocket, lalu lakukan konversi.</div>
+        <div class="big">No history found</div>
+        <div>Add IDR transactions or create a pocket to get started.</div>
       </div>
     </td></tr>`;
     return;
@@ -496,8 +497,8 @@ function renderTable(){
       ? `<span class="moneyIn">${fmtCurrency(e.currency, e.amount)}</span>`
       : `<span class="moneyOut">${fmtCurrency(e.currency, e.amount)}</span>`;
 
-    const typeLabel = e.type === "in" ? "Masuk" : "Keluar";
-    const delBadge = e.isDeleted ? ` <span class="pill" style="border-color: rgba(255,92,124,.35); color:#ffb1c0;">deleted</span>` : "";
+    const typeLabel = e.type === "in" ? "In" : "Out";
+    const delBadge = e.isDeleted ? ` <span class="pill" style="border-color: rgba(255,92,124,.35); color:#ffb1c0;">Deleted</span>` : "";
 
     let runTxt = "-";
     if (e.source === "IDR"){
@@ -508,26 +509,27 @@ function renderTable(){
       runTxt = (v === undefined) ? "-" : fmtCurrency(e.currency, v);
     }
 
-    const isLocked = (e.source === "POCKET" && (e.rawType === "fx_buy" || e.rawType === "fx_sell")); // konversi: no edit
-    const editBtn = isLocked ? `<button class="btn icon" disabled title="Konversi tidak bisa diedit">🔒</button>` :
-      `<button class="btn icon" data-action="edit" data-id="${e.id}" data-source="${e.source}">✏️</button>`;
+    const isLocked = (e.source === "POCKET" && (e.rawType === "fx_buy" || e.rawType === "fx_sell")); // conversion: no edit
+    const editBtn = isLocked 
+      ? `<button class="btn icon" disabled title="Conversion record is locked"><i class="fa-solid fa-lock"></i></button>` 
+      : `<button class="btn icon" data-action="edit" data-id="${e.id}" data-source="${e.source}" title="Edit"><i class="fa-solid fa-pen"></i></button>`;
 
-    const delBtn  = `<button class="btn icon bad" data-action="delete" data-id="${e.id}" data-source="${e.source}">🗑️</button>`;
+    const delBtn  = `<button class="btn icon bad" data-action="delete" data-id="${e.id}" data-source="${e.source}" title="Delete"><i class="fa-solid fa-trash"></i></button>`;
 
-    const restoreBtn = `<button class="btn icon good" data-action="restore" data-id="${e.id}" data-source="${e.source}">↩</button>`;
-    const hardBtn = `<button class="btn icon bad" data-action="hard" data-id="${e.id}" data-source="${e.source}">🔥</button>`;
+    const restoreBtn = `<button class="btn icon good" data-action="restore" data-id="${e.id}" data-source="${e.source}" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>`;
+    const hardBtn = `<button class="btn icon bad" data-action="hard" data-id="${e.id}" data-source="${e.source}" title="Permanent Delete"><i class="fa-solid fa-ban"></i></button>`;
 
     const actions = e.isDeleted ? `${restoreBtn}${hardBtn}` : `${editBtn}${delBtn}`;
 
     return `
       <tr>
-        <td data-label="Tanggal">${fmtDate(e.date)}${delBadge}</td>
-        <td data-label="Catatan">${escapeHtml(e.note || "")}</td>
-        <td class="num" data-label="Nominal">${amt}</td>
+        <td data-label="Date">${fmtDate(e.date)}${delBadge}</td>
+        <td data-label="Note">${escapeHtml(e.note || "")}</td>
+        <td class="num" data-label="Amount">${amt}</td>
         <td data-label="Currency">${escapeHtml(e.currency)}</td>
-        <td data-label="Tipe">${typeLabel}</td>
-        <td class="num" data-label="Saldo">${runTxt}</td>
-        <td class="num" data-label="Aksi"><div class="actions">${actions}</div></td>
+        <td data-label="Type">${typeLabel}</td>
+        <td class="num" data-label="Balance">${runTxt}</td>
+        <td class="num" data-label="Action"><div class="actions">${actions}</div></td>
       </tr>
     `;
   }).join("");
@@ -541,7 +543,7 @@ function renderTargetOptions(list, keepUid=""){
     return A.localeCompare(B);
   });
 
-  targetSelect.innerHTML = `<option value="">— Pilih target —</option>` + sorted.map(u => {
+  targetSelect.innerHTML = `<option value="">— Select Target —</option>` + sorted.map(u => {
     const label = u.displayName ? `${u.displayName} (${u.username})` : u.username;
     return `<option value="${u.uid}">${escapeHtml(label)}</option>`;
   }).join("");
@@ -603,7 +605,7 @@ function pickTarget(uid){
       };
     });
     applyFilters();
-  }, (err) => toast({ title:"Gagal load transaksi IDR", message: err.message || "Cek rules.", type:"err" }));
+  }, (err) => toast({ title:"Error", message: err.message || "Failed to load IDR transactions.", type:"err" }));
 
   // 3) pocket_transactions (query ownerUid only to avoid composite index)
   const qPT = query(collection(db, "pocket_transactions"), where("ownerUid", "==", selectedOwnerUid));
@@ -627,15 +629,15 @@ function pickTarget(uid){
       };
     });
     applyFilters();
-  }, (err) => toast({ title:"Gagal load pocket tx", message: err.message || "Cek rules.", type:"err" }));
+  }, (err) => toast({ title:"Error", message: err.message || "Failed to load pocket transactions.", type:"err" }));
 }
 
 /** ---------- Modal Modes ---------- */
 function setModalModeAdd(){
   editingId = null;
   editingSource = null;
-  modalTitle.textContent = "Tambah transaksi";
-  modalHint.textContent = "IDR masuk/keluar atau transaksi pocket (valas). Konversi IDR→Valas pakai tombol Konversi.";
+  modalTitle.textContent = "Add Transaction";
+  modalHint.textContent = "Add Income/Expense or Pocket Transaction. Use 'Convert' for currency exchange.";
   btnRestore.style.display = "none";
   btnHardDelete.style.display = "none";
   btnSaveModal.style.display = "inline-flex";
@@ -653,8 +655,8 @@ function setModalModeAdd(){
 function setModalModeEditIdr(tx){
   editingId = tx.id;
   editingSource = "IDR";
-  modalTitle.textContent = "Edit transaksi (IDR)";
-  modalHint.textContent = "Perubahan akan mempengaruhi saldo IDR.";
+  modalTitle.textContent = "Edit Transaction (IDR)";
+  modalHint.textContent = "Changes will affect IDR balance.";
   btnRestore.style.display = "none";
   btnHardDelete.style.display = "none";
   btnSaveModal.style.display = "inline-flex";
@@ -674,8 +676,8 @@ function setModalModeEditIdr(tx){
 function setModalModeEditPocket(tx){
   editingId = tx.id;
   editingSource = "POCKET";
-  modalTitle.textContent = "Edit transaksi (Pocket)";
-  modalHint.textContent = "Tidak untuk record konversi (locked).";
+  modalTitle.textContent = "Edit Transaction (Pocket)";
+  modalHint.textContent = "Conversion records are locked.";
   btnRestore.style.display = "none";
   btnHardDelete.style.display = "none";
   btnSaveModal.style.display = "inline-flex";
@@ -695,8 +697,8 @@ function setModalModeEditPocket(tx){
 function setModalModeDeleted(evt){
   editingId = evt.id;
   editingSource = evt.source;
-  modalTitle.textContent = "Transaksi deleted";
-  modalHint.textContent = "Anda bisa restore atau hapus permanen.";
+  modalTitle.textContent = "Deleted Transaction";
+  modalHint.textContent = "You can restore or permanently delete this item.";
   btnRestore.style.display = "inline-flex";
   btnHardDelete.style.display = "inline-flex";
   btnSaveModal.style.display = "none";
@@ -761,11 +763,11 @@ async function updateIdrTx(id, { date, type, amount, note }){
 
 async function createPocketTx({ pocketId, currency, date, type, amount, note }){
   const p = getPocketByCurrency(currency);
-  if (!p) throw new Error("Pocket tidak ditemukan.");
+  if (!p) throw new Error("Pocket not found.");
 
   const eff = getPocketEffect(type, amount);
   const nextBal = p.balance + eff;
-  if (nextBal < -1e-9) throw new Error("Saldo pocket tidak cukup.");
+  if (nextBal < -1e-9) throw new Error("Insufficient pocket balance.");
 
   await addDoc(collection(db, "pocket_transactions"), {
     ownerUid: selectedOwnerUid,
@@ -790,14 +792,14 @@ async function createPocketTx({ pocketId, currency, date, type, amount, note }){
 async function updatePocketTx(id, oldTx, { date, type, amount, note }){
   const cur = String(oldTx.currency || "").toUpperCase();
   const p = getPocketByCurrency(cur);
-  if (!p) throw new Error("Pocket tidak ditemukan.");
+  if (!p) throw new Error("Pocket not found.");
 
   const oldEff = getPocketEffect(oldTx.type === "fx_buy" ? "in" : oldTx.type, oldTx.amount);
   const newEff = getPocketEffect(type, amount);
   const delta = newEff - oldEff;
 
   const nextBal = p.balance + delta;
-  if (nextBal < -1e-9) throw new Error("Saldo pocket tidak cukup untuk perubahan ini.");
+  if (nextBal < -1e-9) throw new Error("Insufficient pocket balance for this change.");
 
   await updateDoc(doc(db, "pocket_transactions", id), {
     date, type,
@@ -838,7 +840,7 @@ async function hardDeleteIdr(id){
 async function softDeletePocket(id, tx){
   const cur = String(tx.currency || "").toUpperCase();
   const p = getPocketByCurrency(cur);
-  if (!p) throw new Error("Pocket tidak ditemukan.");
+  if (!p) throw new Error("Pocket not found.");
 
   // reverse effect
   const eff = getPocketEffect(tx.type === "fx_buy" ? "in" : tx.type, tx.amount);
@@ -860,11 +862,11 @@ async function softDeletePocket(id, tx){
 async function restorePocket(id, tx){
   const cur = String(tx.currency || "").toUpperCase();
   const p = getPocketByCurrency(cur);
-  if (!p) throw new Error("Pocket tidak ditemukan.");
+  if (!p) throw new Error("Pocket not found.");
 
   const eff = getPocketEffect(tx.type === "fx_buy" ? "in" : tx.type, tx.amount);
   const nextBal = p.balance + eff;
-  if (nextBal < -1e-9) throw new Error("Saldo pocket tidak cukup untuk restore.");
+  if (nextBal < -1e-9) throw new Error("Insufficient pocket balance to restore.");
 
   await updateDoc(doc(db, "pocket_transactions", id), {
     isDeleted: false,
@@ -906,7 +908,7 @@ txBody.addEventListener("click", (e) => {
       const tx = allPocketTx.find(x => x.id === id);
       if (!tx) return;
       if (tx.type === "fx_buy"){
-        toast({ title:"Terkunci", message:"Record konversi tidak bisa diedit.", type:"err" });
+        toast({ title:"Locked", message:"Conversion records cannot be edited.", type:"err" });
         return;
       }
       setModalModeEditPocket(tx);
@@ -917,7 +919,7 @@ txBody.addEventListener("click", (e) => {
   if (action === "delete"){
     deletingId = id;
     deletingSource = source;
-    confirmText.textContent = `${fmtDate(evt.date)} • ${evt.type === "in" ? "Masuk" : "Keluar"} • ${fmtCurrency(evt.currency, evt.amount)} • ${evt.note}`;
+    confirmText.textContent = `${fmtDate(evt.date)} • ${evt.type === "in" ? "In" : "Out"} • ${fmtCurrency(evt.currency, evt.amount)} • ${evt.note}`;
     openConfirm();
   }
 
@@ -941,13 +943,13 @@ if (pocketWrap){
     const p = pockets.find(x => x.id === pid);
     if (!p) return;
 
-    const balRounded = Math.round(Number(p.balance || 0) * 100) / 100; // paksa 2 digit
-    const EPS = 0.0005; // toleransi kecil
+    const balRounded = Math.round(Number(p.balance || 0) * 100) / 100;
+    const EPS = 0.0005;
 
     if (balRounded > EPS){
     toast({
-        title: "Ditolak",
-        message: `Pocket ${p.currency} masih memiliki saldo ${fmtCurrency(p.currency, balRounded)}. Habiskan/jual dulu sampai 0 sebelum dihapus.`,
+        title: "Denied",
+        message: `Pocket ${p.currency} still has a balance of ${fmtCurrency(p.currency, balRounded)}. Please empty/sell the balance before deleting.`,
         type: "err"
     });
 
@@ -955,7 +957,7 @@ if (pocketWrap){
 
     }
 
-    const ok = confirm(`Hapus pocket ${p.currency}? Pocket akan disembunyikan dari user, histori tetap ada.`);
+    const ok = confirm(`Delete pocket ${p.currency}? It will be hidden from the user, but history remains.`);
     if (!ok) return;
 
     try{
@@ -965,9 +967,9 @@ if (pocketWrap){
         updatedAt: serverTimestamp(),
         updatedBy: auth.currentUser.uid
       });
-      toast({ title: "Sukses", message: `Pocket ${p.currency} dihapus (dinonaktifkan).` });
+      toast({ title: "Success", message: `Pocket ${p.currency} deleted (deactivated).` });
     }catch(err){
-      toast({ title: "Gagal", message: err.message || "Gagal menghapus pocket.", type: "err" });
+      toast({ title: "Error", message: err.message || "Failed to delete pocket.", type: "err" });
     }
   });
 }
@@ -981,49 +983,49 @@ btnAdd.addEventListener("click", () => {
 btnSaveModal.addEventListener("click", async () => {
   try{
     btnSaveModal.disabled = true;
-    if (!selectedOwnerUid) throw new Error("Pilih target dulu.");
+    if (!selectedOwnerUid) throw new Error("Please select a target first.");
 
     const date = mDate.value;
     const type = mType.value;
     const note = (mNote.value || "").trim();
     const cur = (mCurrency.value || "IDR").toUpperCase();
 
-    if (!date) throw new Error("Tanggal wajib diisi.");
-    if (!(type === "in" || type === "out")) throw new Error("Tipe tidak valid.");
-    if (!note) throw new Error("Catatan wajib diisi.");
+    if (!date) throw new Error("Date is required.");
+    if (!(type === "in" || type === "out")) throw new Error("Invalid type.");
+    if (!note) throw new Error("Note is required.");
 
     if (cur === "IDR"){
       const amount = getMoneyRaw(mAmount);
-      if (!Number.isFinite(amount) || amount <= 0) throw new Error("Nominal IDR harus > 0.");
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error("IDR amount must be > 0.");
 
       if (!editingId){
         await createIdrTx({ date, type, amount, note });
-        toast({ title:"Sukses", message:"Transaksi IDR ditambahkan." });
+        toast({ title:"Success", message:"IDR transaction added." });
       } else {
         await updateIdrTx(editingId, { date, type, amount, note });
-        toast({ title:"Sukses", message:"Transaksi IDR diperbarui." });
+        toast({ title:"Success", message:"IDR transaction updated." });
       }
 
     } else {
       const p = getPocketByCurrency(cur);
-      if (!p) throw new Error("Pocket tidak ditemukan. Buat pocket dulu.");
+      if (!p) throw new Error("Pocket not found. Please create one first.");
       const amount = parseFx2(mAmountFX.value);
-      if (amount <= 0) throw new Error(`Nominal ${cur} harus > 0.`);
+      if (amount <= 0) throw new Error(`Amount ${cur} must be > 0.`);
 
       if (!editingId){
         await createPocketTx({ pocketId: p.id, currency: cur, date, type, amount, note });
-        toast({ title:"Sukses", message:`Transaksi pocket ${cur} ditambahkan.` });
+        toast({ title:"Success", message:`Pocket transaction ${cur} added.` });
       } else {
         const old = allPocketTx.find(x => x.id === editingId);
-        if (!old) throw new Error("Data pocket tx tidak ditemukan.");
+        if (!old) throw new Error("Pocket transaction data not found.");
         await updatePocketTx(editingId, old, { date, type, amount, note });
-        toast({ title:"Sukses", message:`Transaksi pocket ${cur} diperbarui.` });
+        toast({ title:"Success", message:`Pocket transaction ${cur} updated.` });
       }
     }
 
     closeModal();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Operasi gagal.", type:"err" });
+    toast({ title:"Error", message: e.message || "Operation failed.", type:"err" });
   }finally{
     btnSaveModal.disabled = false;
   }
@@ -1035,36 +1037,36 @@ btnRestore.addEventListener("click", async () => {
     if (!editingId || !editingSource) return;
 
     const evt = allEvents.find(x => x.id === editingId && x.source === editingSource);
-    if (!evt) throw new Error("Data tidak ditemukan.");
+    if (!evt) throw new Error("Data not found.");
 
     if (editingSource === "IDR"){
       await restoreIdr(editingId);
     } else {
       const tx = allPocketTx.find(x => x.id === editingId);
-      if (!tx) throw new Error("Pocket tx tidak ditemukan.");
+      if (!tx) throw new Error("Pocket transaction not found.");
       await restorePocket(editingId, tx);
     }
 
-    toast({ title:"Sukses", message:"Berhasil restore." });
+    toast({ title:"Success", message:"Restored successfully." });
     closeModal();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Restore gagal.", type:"err" });
+    toast({ title:"Error", message: e.message || "Restore failed.", type:"err" });
   }finally{
     btnRestore.disabled = false;
   }
 });
 
 btnHardDelete.addEventListener("click", async () => {
-  const ok = confirm("Hapus PERMANEN? Tidak bisa dibatalkan.");
+  const ok = confirm("Delete PERMANENTLY? This action cannot be undone.");
   if (!ok) return;
   try{
     btnHardDelete.disabled = true;
     if (!editingId || !editingSource) return;
 
     const evt = allEvents.find(x => x.id === editingId && x.source === editingSource);
-    if (!evt) throw new Error("Data tidak ditemukan.");
+    if (!evt) throw new Error("Data not found.");
     if (!evt.isDeleted){
-      throw new Error("Hard delete hanya untuk data yang sudah deleted (soft).");
+      throw new Error("Hard delete is only for soft-deleted data.");
     }
 
     if (editingSource === "IDR"){
@@ -1073,10 +1075,10 @@ btnHardDelete.addEventListener("click", async () => {
       await hardDeletePocket(editingId);
     }
 
-    toast({ title:"Sukses", message:"Hapus permanen berhasil." });
+    toast({ title:"Success", message:"Permanently deleted." });
     closeModal();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Delete permanen gagal.", type:"err" });
+    toast({ title:"Error", message: e.message || "Permanent delete failed.", type:"err" });
   }finally{
     btnHardDelete.disabled = false;
   }
@@ -1098,14 +1100,14 @@ btnDoDelete.addEventListener("click", async () => {
       await softDeleteIdr(deletingId);
     } else {
       const tx = allPocketTx.find(x => x.id === deletingId);
-      if (!tx) throw new Error("Pocket tx tidak ditemukan.");
+      if (!tx) throw new Error("Pocket transaction not found.");
       await softDeletePocket(deletingId, tx);
     }
 
-    toast({ title:"Sukses", message:"Transaksi dihapus (soft)." });
+    toast({ title:"Success", message:"Transaction deleted (soft)." });
     closeConfirm();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Hapus gagal.", type:"err" });
+    toast({ title:"Error", message: e.message || "Delete failed.", type:"err" });
     closeConfirm();
   }
 });
@@ -1152,7 +1154,7 @@ targetSearch.addEventListener("input", debounce(() => {
 
 btnReload.addEventListener("click", () => {
   applyFilters();
-  toast({ title:"Info", message:"Re-render selesai." });
+  toast({ title:"Info", message:"Refresh complete." });
 });
 
 btnLogout.addEventListener("click", async () => {
@@ -1162,7 +1164,7 @@ btnLogout.addEventListener("click", async () => {
 
 /** ---------- Pocket: create pocket ---------- */
 btnNewPocket?.addEventListener("click", () => {
-  if (!selectedOwnerUid) return toast({ title:"Gagal", message:"Pilih target dulu.", type:"err" });
+  if (!selectedOwnerUid) return toast({ title:"Error", message:"Please select a target first.", type:"err" });
   pocketModalSub.textContent = `Target: ${selectedOwnerLabel || "-"}`;
   pCurrency.value = "";
   pRate.value = "";
@@ -1175,14 +1177,14 @@ pocketModal?.addEventListener("click", (e) => { if (e.target === pocketModal) cl
 
 btnSavePocket?.addEventListener("click", async () => {
   try{
-    if (!selectedOwnerUid) throw new Error("Pilih target dulu.");
+    if (!selectedOwnerUid) throw new Error("Please select a target first.");
 
     const cur = String(pCurrency.value || "").trim().toUpperCase();
     const rate = parseRateIDR(pRate.value);
 
-    if (!/^[A-Z]{3}$/.test(cur)) throw new Error("Currency code harus 3 huruf, contoh USD.");
-    if (rate <= 0) throw new Error("Rate harus > 0.");
-    if (pockets.some(p => p.currency === cur)) throw new Error(`Pocket ${cur} sudah ada.`);
+    if (!/^[A-Z]{3}$/.test(cur)) throw new Error("Currency code must be 3 letters (e.g., USD).");
+    if (rate <= 0) throw new Error("Rate must be > 0.");
+    if (pockets.some(p => p.currency === cur)) throw new Error(`Pocket ${cur} already exists.`);
 
     await addDoc(collection(db, "pockets"), {
       ownerUid: selectedOwnerUid,
@@ -1194,17 +1196,17 @@ btnSavePocket?.addEventListener("click", async () => {
       createdBy: auth.currentUser.uid
     });
 
-    toast({ title:"Sukses", message:`Pocket ${cur} dibuat.` });
+    toast({ title:"Success", message:`Pocket ${cur} created.` });
     closePocketModal();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Gagal membuat pocket.", type:"err" });
+    toast({ title:"Error", message: e.message || "Failed to create pocket.", type:"err" });
   }
 });
 
 /** ---------- FX Convert IDR -> Valas ---------- */
 btnFxConvert?.addEventListener("click", () => {
-  if (!selectedOwnerUid) return toast({ title:"Gagal", message:"Pilih target dulu.", type:"err" });
-  if (!pockets.length) return toast({ title:"Gagal", message:"Belum ada pocket. Buat pocket dulu.", type:"err" });
+  if (!selectedOwnerUid) return toast({ title:"Error", message:"Please select a target first.", type:"err" });
+  if (!pockets.length) return toast({ title:"Error", message:"No pockets found. Please create a pocket first.", type:"err" });
 
   fxModalSub.textContent = `Target: ${selectedOwnerLabel || "-"}`;
   fxDate.value = toISODateToday();
@@ -1212,13 +1214,13 @@ btnFxConvert?.addEventListener("click", () => {
   fxResult.value = "";
   fxNote.value = "";
   fxRateHint.textContent = "Rate: —";
-  fxIdrHint.textContent = `Saldo IDR tersedia: ${kSaldo.textContent || "—"}`;
+  fxIdrHint.textContent = `Available IDR Balance: ${kSaldo.textContent || "—"}`;
   openFxModal();
 });
 
 btnFxSell?.addEventListener("click", () => {
-  if (!selectedOwnerUid) return toast({ title:"Gagal", message:"Pilih target dulu.", type:"err" });
-  if (!pockets.length) return toast({ title:"Gagal", message:"Belum ada pocket.", type:"err" });
+  if (!selectedOwnerUid) return toast({ title:"Error", message:"Please select a target first.", type:"err" });
+  if (!pockets.length) return toast({ title:"Error", message:"No pockets found.", type:"err" });
 
   fxSellModalSub.textContent = `Target: ${selectedOwnerLabel || "-"}`;
   fxSellDate.value = toISODateToday();
@@ -1226,8 +1228,8 @@ btnFxSell?.addEventListener("click", () => {
   fxSellResult.value = "";
   fxSellNote.value = "";
   fxSellRate.value = "";
-  fxSellRateHint.textContent = "Kurs default pocket: —";
-  fxSellBalHint.textContent = "Saldo pocket: —";
+  fxSellRateHint.textContent = "Default Pocket Rate: —";
+  fxSellBalHint.textContent = "Pocket Balance: —";
   openFxSellModal();
 });
 
@@ -1240,15 +1242,15 @@ function calcFxSellPreview(){
   const p = pockets.find(x => x.id === pid);
   if (!p){
     fxSellRateHint.textContent = "Rate: —";
-    fxSellBalHint.textContent = "Saldo pocket: —";
+    fxSellBalHint.textContent = "Pocket Balance: —";
     fxSellResult.value = "";
     return;
   }
 
-  fxSellRateHint.textContent = `Kurs default pocket: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
-  fxSellBalHint.textContent = `Saldo pocket: ${fmtCurrency(p.currency, p.balance)}`;
+  fxSellRateHint.textContent = `Default Pocket Rate: ${fmtIDR(p.rate)} per 1 ${p.currency}`;
+  fxSellBalHint.textContent = `Pocket Balance: ${fmtCurrency(p.currency, p.balance)}`;
 
-  // kalau kurs jual masih kosong, auto isi dari default pocket
+  // if sell rate is empty, auto-fill from default pocket
   if (fxSellRate && !String(fxSellRate.value || "").trim()){
     fxSellRate.value = String(p.rate);
   }
@@ -1277,22 +1279,22 @@ btnDoFxSell?.addEventListener("click", async () => {
   try{
     const pid = fxSellPocket.value;
     const p = pockets.find(x => x.id === pid);
-    if (!p) throw new Error("Pilih pocket dulu.");
+    if (!p) throw new Error("Please select a pocket first.");
 
     const date = fxSellDate.value;
     const amt = parseFx2(fxSellAmount.value);
     const sellRate = parseRateIDR(fxSellRate ? fxSellRate.value : "");
-    if (sellRate <= 0) throw new Error("Kurs jual harus > 0.");
-    const note = (fxSellNote.value || "").trim() || `Konversi ${p.currency} → IDR`;
+    if (sellRate <= 0) throw new Error("Sell rate must be > 0.");
+    const note = (fxSellNote.value || "").trim() || `Converted ${p.currency} → IDR`;
 
-    if (!date) throw new Error("Tanggal wajib.");
-    if (!Number.isFinite(amt) || amt <= 0) throw new Error(`Nominal ${p.currency} harus > 0.`);
+    if (!date) throw new Error("Date is required.");
+    if (!Number.isFinite(amt) || amt <= 0) throw new Error(`Amount ${p.currency} must be > 0.`);
     const EPS = 0.0005;
-    if (amt > (p.balance + EPS)) throw new Error("Nominal melebihi saldo pocket yang tersedia.");
+    if (amt > (p.balance + EPS)) throw new Error("Amount exceeds available pocket balance.");
 
-    const idr = Math.round(amt * sellRate); // simpan IDR sebagai integer rupiah
+    const idr = Math.round(amt * sellRate); // store IDR as integer rupiah
 
-    // 1) Pocket berkurang (catat fx_sell)
+    // 1) Pocket decreases (record fx_sell)
     await addDoc(collection(db, "pocket_transactions"), {
       ownerUid: selectedOwnerUid,
       pocketId: p.id,
@@ -1308,29 +1310,29 @@ btnDoFxSell?.addEventListener("click", async () => {
       isDeleted: false
     });
 
-    // 2) Update saldo pocket
+    // 2) Update pocket balance
     await updateDoc(doc(db, "pockets", p.id), {
       balance: Math.round((p.balance - amt) * 100) / 100,
       updatedAt: serverTimestamp(),
       updatedBy: auth.currentUser.uid
     });
 
-    // 3) IDR bertambah (catat transaksi IDR in)
+    // 3) IDR increases (record IDR in transaction)
     await addDoc(collection(db, "transactions"), {
       ownerUid: selectedOwnerUid,
       date,
       type: "in",
       amount: idr,
-      note: `Hasil konversi ${p.currency} @ ${fmtIDR(sellRate)} (${note})`,
+      note: `Conversion result ${p.currency} @ ${fmtIDR(sellRate)} (${note})`,
       createdAt: serverTimestamp(),
       createdBy: auth.currentUser.uid,
       isDeleted: false
     });
 
-    toast({ title:"Sukses", message:`Konversi: ${fmtCurrency(p.currency, amt)} → ${fmtIDR(idr)}` });
+    toast({ title:"Success", message:`Converted: ${fmtCurrency(p.currency, amt)} → ${fmtIDR(idr)}` });
     closeFxSellModal();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Konversi gagal.", type:"err" });
+    toast({ title:"Error", message: e.message || "Conversion failed.", type:"err" });
   }
 });
 
@@ -1364,30 +1366,30 @@ btnDoFx?.addEventListener("click", async () => {
   try{
     const pid = fxPocket.value;
     const p = pockets.find(x => x.id === pid);
-    if (!p) throw new Error("Pilih pocket dulu.");
+    if (!p) throw new Error("Please select a pocket first.");
 
     const date = fxDate.value;
     const idr = Number(String(fxIdr.value || "").replace(/[^\d]/g,"")) || 0;
-    const note = (fxNote.value || "").trim() || `Konversi IDR → ${p.currency}`;
+    const note = (fxNote.value || "").trim() || `Convert IDR → ${p.currency}`;
 
-    if (!date) throw new Error("Tanggal wajib.");
-    if (idr <= 0) throw new Error("IDR harus > 0.");
+    if (!date) throw new Error("Date is required.");
+    if (idr <= 0) throw new Error("IDR must be > 0.");
 
-    // cek saldo IDR tersedia dari transaksi IDR (non-deleted)
+    // check available IDR balance from IDR transactions (non-deleted)
     const { bal } = computeIdrKpis(allIdrTx);
-    if (idr > bal) throw new Error("Nominal melebihi saldo IDR yang tersedia.");
+    if (idr > bal) throw new Error("Amount exceeds available IDR balance.");
 
     const fx = Math.round((idr / p.rate) * 100) / 100;
 
-    // 1) buat transaksi IDR out
+    // 1) create IDR out transaction
     await createIdrTx({
       date,
       type: "out",
       amount: idr,
-      note: `Konversi ke ${p.currency} (${note})`
+      note: `Converted to ${p.currency} (${note})`
     });
 
-    // 2) buat pocket transaction fx_buy
+    // 2) create pocket transaction fx_buy
     await addDoc(collection(db, "pocket_transactions"), {
       ownerUid: selectedOwnerUid,
       pocketId: p.id,
@@ -1410,10 +1412,10 @@ btnDoFx?.addEventListener("click", async () => {
       updatedBy: auth.currentUser.uid
     });
 
-    toast({ title:"Sukses", message:`Konversi: ${fmtIDR(idr)} → ${fmtCurrency(p.currency, fx)}` });
+    toast({ title:"Success", message:`Converted: ${fmtIDR(idr)} → ${fmtCurrency(p.currency, fx)}` });
     closeFxModal();
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Konversi gagal.", type:"err" });
+    toast({ title:"Error", message: e.message || "Conversion failed.", type:"err" });
   }
 });
 
@@ -1442,7 +1444,7 @@ onAuthStateChanged(auth, async (user) => {
 
   const prof = await getDoc(doc(db, "users", user.uid));
   const name = prof.exists() ? (prof.data().displayName || prof.data().username) : "Admin";
-  elWho.textContent = `Login sebagai: ${name} (admin)`;
+  elWho.textContent = `Logged in as: ${name} (Admin)`;
 
   setSortIcon(sortField);
 
@@ -1453,6 +1455,6 @@ onAuthStateChanged(auth, async (user) => {
       pickTarget(usersList[0].uid);
     }
   }catch(e){
-    toast({ title:"Gagal", message: e.message || "Gagal memuat user.", type:"err" });
+    toast({ title:"Error", message: e.message || "Failed to load users.", type:"err" });
   }
 });

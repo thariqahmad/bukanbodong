@@ -23,7 +23,7 @@ const filterMonth = document.getElementById("filterMonth");
 const filterType = document.getElementById("filterType");
 const filterSearch = document.getElementById("filterSearch");
 const btnReset = document.getElementById("btnReset");
-const btnReload = document.getElementById("btnReload"); // NOTE: di user.html tombol ini memang dikomentari
+const btnReload = document.getElementById("btnReload"); // NOTE: commented out in HTML
 
 const txBody = document.getElementById("txBody");
 const count = document.getElementById("count");
@@ -45,7 +45,7 @@ let unsubP = null;
 let sortField = "date";
 let sortDir = "desc";
 
-// helper: aman kalau elemennya null
+// helper: safe if element is null
 function on(el, evt, fn){
   if (el) el.addEventListener(evt, fn);
 }
@@ -54,10 +54,12 @@ function setSortIcon(field){
   const map = ["date","note","amount","currency","type"];
   for (const f of map){
     const el = document.getElementById(`si_${f}`);
-    if (el) el.textContent = "↕";
+    if (el) el.innerHTML = '<i class="fa-solid fa-sort" style="opacity:0.3"></i>';
   }
   const el = document.getElementById(`si_${field}`);
-  if (el) el.textContent = sortDir === "asc" ? "↑" : "↓";
+  if (el) el.innerHTML = sortDir === "asc" 
+    ? '<i class="fa-solid fa-sort-up"></i>' 
+    : '<i class="fa-solid fa-sort-down"></i>';
 }
 
 function computeIdrKpis(txs){
@@ -75,11 +77,11 @@ function renderPocketCards(){
 
   if (!pockets.length){
     pocketCards.innerHTML = `<div class="empty" style="grid-column:1/-1;">
-      <div class="emoji">💱</div>
-      <div class="big">Belum ada pocket</div>
-      <div>Nanti muncul setelah admin menambah pocket dan melakukan konversi.</div>
+      <div class="emoji"><i class="fa-solid fa-wallet" style="font-size:2rem; color:#ccc;"></i></div>
+      <div class="big">No pockets found</div>
+      <div>They will appear after the admin adds a pocket and performs a conversion.</div>
     </div>`;
-    if (pocketCount) pocketCount.textContent = "0 pocket";
+    if (pocketCount) pocketCount.textContent = "0 pockets";
     return;
   }
 
@@ -87,11 +89,11 @@ function renderPocketCards(){
     <div class="kpi">
       <div class="k">${escapeHtml(p.currency)} • Rate ${fmtIDR(p.rate)} / 1</div>
       <div class="v">${fmtCurrency(p.currency, p.balance)}</div>
-      <div class="muted" style="margin-top:6px;">Pocket aktif</div>
+      <div class="muted" style="margin-top:6px;">Active pocket</div>
     </div>
   `).join("");
 
-  if (pocketCount) pocketCount.textContent = `${pockets.length} pocket`;
+  if (pocketCount) pocketCount.textContent = `${pockets.length} pockets`;
 }
 
 function tsToMs(ts){
@@ -133,9 +135,9 @@ function normalizeEvents(){
 
     const noteExtra =
       (t.type === "fx_buy")
-        ? ` (Konversi dari ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        ? ` (Convert from ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
         : (t.type === "fx_sell")
-        ? ` (Dikonversi menjadi ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
+        ? ` (Converted to ${fmtIDR(t.idrAmount || 0)} @ ${fmtIDR(t.rate || 0)}/${cur})`
         : "";
 
     events.push({
@@ -160,7 +162,7 @@ function rebuildMonthOptionsFromEvents(){
   const base = allEvents.filter(x => !x.isDeleted);
   const months = buildMonthOptions(base);
   const prev = filterMonth.value;
-  filterMonth.innerHTML = `<option value="">Semua</option>` + months.map(m => `<option value="${m}">${m}</option>`).join("");
+  filterMonth.innerHTML = `<option value="">All</option>` + months.map(m => `<option value="${m}">${m}</option>`).join("");
   if (months.includes(prev)) filterMonth.value = prev;
 }
 
@@ -268,17 +270,17 @@ function applyFilters(){
   kOut.textContent = fmtIDR(tout);
 
   renderTable();
-  count.textContent = `${viewEvents.length} baris`;
-  meta.textContent = `Histori gabungan IDR + Pocket • Live update aktif`;
+  count.textContent = `${viewEvents.length} rows`;
+  meta.textContent = `Combined History IDR + Pocket • Live update active`;
 }
 
 function renderTable(){
   if (!viewEvents.length){
     txBody.innerHTML = `<tr><td colspan="6">
       <div class="empty">
-        <div class="emoji">🗂️</div>
-        <div class="big">Belum ada histori</div>
-        <div>Nanti histori muncul saat admin menambah transaksi atau konversi.</div>
+        <div class="emoji"><i class="fa-solid fa-folder-open" style="font-size:2rem; color:#ccc;"></i></div>
+        <div class="big">No history found</div>
+        <div>History will appear when the admin adds transactions or conversions.</div>
       </div>
     </td></tr>`;
     return;
@@ -291,7 +293,7 @@ function renderTable(){
       ? `<span class="moneyIn">${fmtCurrency(e.currency, e.amount)}</span>`
       : `<span class="moneyOut">${fmtCurrency(e.currency, e.amount)}</span>`;
 
-    const typeLabel = e.type === "in" ? "Masuk" : "Keluar";
+    const typeLabel = e.type === "in" ? "In" : "Out";
 
     let runTxt = "-";
     if (e.source === "IDR"){
@@ -304,12 +306,12 @@ function renderTable(){
 
     return `
       <tr>
-        <td data-label="Tanggal">${fmtDate(e.date)}</td>
-        <td data-label="Catatan">${escapeHtml(e.note || "")}</td>
-        <td class="num" data-label="Nominal">${amt}</td>
+        <td data-label="Date">${fmtDate(e.date)}</td>
+        <td data-label="Note">${escapeHtml(e.note || "")}</td>
+        <td class="num" data-label="Amount">${amt}</td>
         <td data-label="Currency">${escapeHtml(e.currency)}</td>
-        <td data-label="Tipe">${typeLabel}</td>
-        <td class="num" data-label="Saldo">${runTxt}</td>
+        <td data-label="Type">${typeLabel}</td>
+        <td class="num" data-label="Balance">${runTxt}</td>
       </tr>
     `;
   }).join("");
@@ -340,13 +342,13 @@ on(btnReset, "click", () => {
   filterType.value = "";
   filterSearch.value = "";
   applyFilters();
-  toast({ title:"Reset", message:"Filter direset." });
+  toast({ title:"Reset", message:"Filters reset." });
 });
 
-// FIX UTAMA: btnReload optional (di user.html memang dikomentari)
+// MAIN FIX: btnReload optional
 on(btnReload, "click", () => {
   applyFilters();
-  toast({ title:"Info", message:"Re-render selesai." });
+  toast({ title:"Info", message:"Refresh complete." });
 });
 
 on(btnLogout, "click", async () => {
@@ -365,7 +367,7 @@ onAuthStateChanged(auth, async (user) => {
 
   const prof = await getMyProfile(user.uid);
   const label = prof ? (prof.displayName || prof.username) : "User";
-  elWho.textContent = `Halo, ${label}`;
+  elWho.textContent = `Hello, ${label}`;
   if (prof?.role === "admin") adminLink.style.display = "inline-flex";
 
   if (unsubIdr) unsubIdr();
@@ -403,7 +405,7 @@ onAuthStateChanged(auth, async (user) => {
       };
     });
     applyFilters();
-  }, (err) => toast({ title:"Gagal load IDR tx", message: err.message || "Cek rules.", type:"err" }));
+  }, (err) => toast({ title:"Error", message: err.message || "Failed to load IDR transactions.", type:"err" }));
 
   const qPT = query(collection(db, "pocket_transactions"), where("ownerUid", "==", user.uid));
   unsubPT = onSnapshot(qPT, (snap) => {
@@ -423,5 +425,5 @@ onAuthStateChanged(auth, async (user) => {
       };
     });
     applyFilters();
-  }, (err) => toast({ title:"Gagal load pocket tx", message: err.message || "Cek rules.", type:"err" }));
+  }, (err) => toast({ title:"Error", message: err.message || "Failed to load pocket transactions.", type:"err" }));
 });

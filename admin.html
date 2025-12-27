@@ -38,7 +38,7 @@
           </div>
           <div class="field" style="margin:0; min-width:240px;">
             <div class="label">Find by Name</div>
-            <input id="targetSearch" class="input" placeholder="ketik nama/username…"/>
+            <input id="targetSearch" class="input" placeholder="Type the username"/>
           </div>
         </div>
       </div>
@@ -53,7 +53,7 @@
           <div class="v" id="kIn">—</div>
         </div>
         <div class="kpi">
-          <div class="k">Total Outgoing</div>
+          <div class="k">Total Expense</div>
           <div class="v" id="kOut">—</div>
         </div>
       </div>
@@ -67,7 +67,7 @@
     </div>
     <div class="row">
         <button class="btn good" id="btnNewPocket">+ Add pocket</button>
-        <button class="btn primary" id="btnFxConvert">Convert IDR → Forex</button>
+        <button class="btn primary" id="btnFxConvert">IDR → Forex</button>
         <button class="btn" id="btnFxSell">Forex → IDR</button>
     </div>
     </div>
@@ -104,7 +104,7 @@
           </div>
           <div class="field" style="margin:0; min-width:240px;">
             <div class="label">Search note</div>
-            <input id="filterSearch" class="input" placeholder="mis: makan, buku…"/>
+            <input id="filterSearch" class="input" placeholder="Search by note"/>
           </div>
         </div>
       </div>
@@ -115,7 +115,7 @@
             <tr>
             <th class="sortable" data-sort="date">Date <span class="sortIcon" id="si_date">↕</span></th>
             <th class="sortable" data-sort="note">Note <span class="sortIcon" id="si_note">↕</span></th>
-            <th class="sortable num" data-sort="amount">Nominal <span class="sortIcon" id="si_amount">↕</span></th>
+            <th class="sortable num" data-sort="amount">Amount <span class="sortIcon" id="si_amount">↕</span></th>
             <th class="sortable" data-sort="currency">Currency <span class="sortIcon" id="si_currency">↕</span></th>
             <th class="sortable" data-sort="type">Type <span class="sortIcon" id="si_type">↕</span></th>
             <th class="num">Running Balance</th>
@@ -125,7 +125,7 @@
           <tbody id="txBody">
             <tr><td colspan="7">
               <div class="empty">
-                <div class="emoji">⏳</div>
+                <!-- <div class="emoji">⏳</div> -->
                 <div class="big">Loading data…</div>
                 <div>Please wait a moment.</div>
               </div>
@@ -174,19 +174,19 @@
 
             <div class="field" style="margin-top:0;" id="amtIDRField">
             <div class="label">Value (IDR)</div>
-            <input id="mAmount" class="input" inputmode="numeric" placeholder="mis: 88.000"/>
+            <input id="mAmount" class="input" inputmode="numeric" placeholder="ie.: 88.000"/>
             </div>
         </div>
 
         <div class="field" id="amtFXField" style="display:none;">
             <div class="label">Value (Forex)</div>
-            <input id="mAmountFX" class="input" inputmode="decimal" placeholder="mis: 5.25"/>
+            <input id="mAmountFX" class="input" inputmode="decimal" placeholder="ie.: 5.25"/>
             <div class="smallNote" id="mFxHint">—</div>
         </div>
 
         <div class="field">
             <div class="label">Notes</div>
-            <input id="mNote" class="input" placeholder="mis: uang makan"/>
+            <input id="mNote" class="input" placeholder="Just add notes"/>
         </div>
 
         <div class="muted" id="modalHint" style="margin-top:10px;">—</div>
@@ -245,13 +245,13 @@
       <div class="split2">
         <div class="field" style="margin-top:0;">
           <div class="label">Currency code</div>
-          <input id="pCurrency" class="input" placeholder="USD / JPY / EUR"/>
+          <input id="pCurrency" class="input" placeholder="USD / MYR / EUR"/>
           <div class="smallNote">3 letters, ie. USD.</div>
         </div>
 
         <div class="field" style="margin-top:0;">
           <div class="label">Rate (IDR per 1 unit)</div>
-          <input id="pRate" class="input" inputmode="numeric" placeholder="contoh: 15500"/>
+          <input id="pRate" class="input" inputmode="numeric" placeholder="eg. 15500"/>
         </div>
       </div>
       <div class="muted" style="margin-top:10px;">Initial pocket balance = 0.</div>
@@ -290,7 +290,7 @@
       <div class="split2">
         <div class="field">
           <div class="label">IDR that is converted</div>
-          <input id="fxIdr" class="input" inputmode="numeric" placeholder="contoh: 100000"/>
+          <input id="fxIdr" class="input" inputmode="numeric" placeholder="eg: 100000"/>
           <div class="smallNote" id="fxIdrHint">IDR balance remaining: —</div>
         </div>
 
@@ -303,7 +303,7 @@
 
       <div class="field">
         <div class="label">Note</div>
-        <input id="fxNote" class="input" placeholder="mis: beli USD untuk tabungan"/>
+        <input id="fxNote" class="input" placeholder="just add some notes"/>
       </div>
 
       <div class="muted" style="margin-top:10px;">Conversion creates 2 histories: IDR out & forex in.</div>
@@ -342,13 +342,13 @@
         <div class="split2">
         <div class="field">
             <div class="label">Converted Forex</div>
-            <input id="fxSellAmount" class="input" inputmode="decimal" placeholder="mis: 5"/>
+            <input id="fxSellAmount" class="input" inputmode="decimal" placeholder="ie.: 5"/>
             <div class="smallNote" id="fxSellBalHint">Pocket balance: —</div>
         </div>
 
         <div class="field">
             <div class="label">Sell rate (IDR per 1 unit)</div>
-            <input id="fxSellRate" class="input" inputmode="numeric" placeholder="mis: 15500"/>
+            <input id="fxSellRate" class="input" inputmode="numeric" placeholder="ie.: 15500"/>
             <div class="smallNote" id="fxSellRateHint">Default pocket rate: —</div>
         </div>
         </div>
@@ -362,7 +362,7 @@
 
       <div class="field">
         <div class="label">Note</div>
-        <input id="fxSellNote" class="input" placeholder="mis: konversi untuk kebutuhan"/>
+        <input id="fxSellNote" class="input" placeholder="just add some notes"/>
       </div>
 
       <div class="muted" style="margin-top:10px;">Conversion creates 2 histories: forex out & IDR in.</div>

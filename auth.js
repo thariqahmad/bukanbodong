@@ -79,17 +79,17 @@ if (isRegister){
         // kalau username sudah dipakai, hapus user Auth yg baru dibuat
         if (String(e.message).includes("USERNAME_TAKEN")) {
           await deleteUser(cred.user);
-          throw new Error("Username sudah dipakai. Coba yang lain.");
+          throw new Error("Username has been used. Try another one.");
         }
         // kalau error lain, biarkan
         throw e;
       }
 
-      toast({ title:"Sukses", message:"Akun dibuat. Mengarahkan…" });
+      toast({ title:"Success", message:"Account created. Redirecting…" });
       await routeByRole(cred.user.uid);
 
     }catch(e){
-      toast({ title:"Gagal", message: e.message || "Register gagal.", type:"err" });
+      toast({ title:"Failed", message: e.message || "Register failed.", type:"err" });
     }finally{
       setLoading(false);
     }
@@ -102,16 +102,16 @@ if (isLogin){
     const password = document.getElementById("password").value;
     const uname = normUsername(username);
 
-    if (!uname || !password) return toast({ title:"Gagal", message:"Isi username dan password.", type:"err" });
+    if (!uname || !password) return toast({ title:"Failed", message:"Type in your username and password.", type:"err" });
 
     setLoading(true);
     try{
       const email = usernameToEmail(uname);
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      toast({ title:"Sukses", message:"Login berhasil. Mengarahkan…" });
+      toast({ title:"Sukses", message:"Login successful. Redirecting..." });
       await routeByRole(cred.user.uid);
     }catch(e){
-      toast({ title:"Login gagal", message: e.message || "Periksa username/password.", type:"err" });
+      toast({ title:"Login failed", message: e.message || "Check username/password.", type:"err" });
     }finally{
       setLoading(false);
     }
