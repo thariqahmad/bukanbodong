@@ -70,20 +70,37 @@ export function attachMoneyMask(inputEl){
   const parse = (s) => Number(String(s).replace(/[^\d]/g, "")) || 0;
   const format = (n) => new Intl.NumberFormat("id-ID").format(n);
 
-  const sync = () => {
-    const n = parse(inputEl.value);
+  const sync = (caretBefore) => {
+    const raw = inputEl.value;
+    const n = parse(raw);
     inputEl.dataset.raw = String(n);
-    inputEl.value = n ? format(n) : "";
+    const formatted = n ? format(n) : "";
+    inputEl.value = formatted;
+
+    // Restore caret: count how many digit-chars were to the left of caret
+    // in the pre-format string, then find that same digit-count position
+    // in the formatted string.
+    if (caretBefore !== undefined && document.activeElement === inputEl){
+      const digitsBeforeCaret = (raw.slice(0, caretBefore).match(/\d/g) || []).length;
+      let digitsSeen = 0;
+      let newCaret = formatted.length;
+      for (let i = 0; i < formatted.length; i++){
+        if (/\d/.test(formatted[i])) digitsSeen++;
+        if (digitsSeen === digitsBeforeCaret){
+          newCaret = i + 1;
+          break;
+        }
+      }
+      inputEl.setSelectionRange(newCaret, newCaret);
+    }
   };
 
   inputEl.addEventListener("input", () => {
     const caret = inputEl.selectionStart;
-    sync();
-    // best-effort caret position; ok for simple use
-    inputEl.setSelectionRange(Math.min(caret, inputEl.value.length), Math.min(caret, inputEl.value.length));
+    sync(caret);
   });
 
-  inputEl.addEventListener("blur", sync);
+  inputEl.addEventListener("blur", () => sync());
   sync();
 }
 
